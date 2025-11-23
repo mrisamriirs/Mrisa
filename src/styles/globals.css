@@ -1,0 +1,43 @@
+/* Define a variable for the primary green color */
+:root {
+--primary-green: #00ff6a;
+}
+/* Progress Bar */
+.progress-bar {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+height: 4px;
+background: var(--primary-green);
+transform-origin: 0%;
+z-index: 50;
+box-shadow: 0 0 10px var(--primary-green);
+}
+
+.btn-primary {
+background-color: var(--primary-green);
+color: #0A0A1A; 
+font-weight: 600;
+padding: 0.75rem 1.5rem;
+border-radius: 0.5rem;
+transition: all 0.3s ease;
+border: 1px solid var(--primary-green);
+}
+.btn-primary:hover {
+background-color: #0A0A1A;
+color: var(--primary-green);
+box-shadow: 0 0 15px var(--primary-green);
+}
+.btn-outline {
+padding: 0.75rem 1.5rem;
+border-radius: 0.5rem;
+border-color: #ffffff;
+color: #ffffff;
+font-weight: 600;
+transition: all 0.3s ease;
+}
+.btn-outline:hover {
+background-color: #ffffff;
+color: #0A0A1A;
+}
