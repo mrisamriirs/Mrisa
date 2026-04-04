@@ -167,18 +167,23 @@ const ensureCollections = async () => {
   const credentials = getBootstrapAdminCredentials();
   if (credentials) {
     const adminUsers = db.collection("admin_users");
-    const existingCount = await adminUsers.countDocuments();
-    if (existingCount === 0) {
-      const now = new Date().toISOString();
-      await adminUsers.insertOne({
-        email: credentials.email.toLowerCase().trim(),
-        full_name: process.env.ADMIN_BOOTSTRAP_FULL_NAME || "Admin",
-        role: "admin",
-        password_hash: hashPassword(credentials.password),
-        created_at: now,
-        updated_at: now,
-      });
-    }
+    const now = new Date().toISOString();
+    await adminUsers.updateOne(
+      { email: credentials.email.toLowerCase().trim() },
+      {
+        $set: {
+          full_name: process.env.ADMIN_BOOTSTRAP_FULL_NAME || "Admin",
+          role: "admin",
+          password_hash: hashPassword(credentials.password),
+          updated_at: now,
+        },
+        $setOnInsert: {
+          email: credentials.email.toLowerCase().trim(),
+          created_at: now,
+        },
+      },
+      { upsert: true }
+    );
   }
 };
 
