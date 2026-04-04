@@ -6,21 +6,31 @@ declare global {
   var __mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-const mongoUri = process.env.MONGO_URI;
+const getMongoClientPromise = () => {
+  if (global.__mongoClientPromise) {
+    return global.__mongoClientPromise;
+  }
 
-if (!mongoUri) {
-  throw new Error("Missing MONGO_URI environment variable");
-}
+  const mongoUri = process.env.MONGO_URI;
+  if (!mongoUri) {
+    throw new Error("Missing MONGO_URI environment variable");
+  }
 
-const mongoClient = new MongoClient(mongoUri);
+  const mongoClient = new MongoClient(mongoUri, {
+    maxPoolSize: 5,
+    minPoolSize: 0,
+    maxIdleTimeMS: 10000,
+    connectTimeoutMS: 10000,
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 30000,
+  });
 
-const clientPromise = global.__mongoClientPromise || mongoClient.connect();
-
-if (!global.__mongoClientPromise) {
-  global.__mongoClientPromise = clientPromise;
-}
+  global.__mongoClientPromise = mongoClient.connect();
+  return global.__mongoClientPromise;
+};
 
 const getDatabaseName = () => {
+  const mongoUri = process.env.MONGO_URI || "";
   try {
     const uri = new URL(mongoUri);
     const databaseName = uri.pathname.replace(/^\//, "");
@@ -100,7 +110,7 @@ const ensureCollections = async () => {
 };
 
 const getMongoDbConnection = async () => {
-  const client = await clientPromise;
+  const client = await getMongoClientPromise();
   return client.db(getDatabaseName());
 };
 
