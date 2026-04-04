@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { Calendar, Clock, Users, Trophy, ExternalLink, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Scene3D } from "@/components/Scene3D";
+import { fetchEvents as fetchEventsApi, submitRegistration } from "@/lib/api";
 
 interface CTFEvent {
   id: string;
@@ -23,6 +23,8 @@ interface CTFEvent {
   registration_link?: string;
 }
 
+const filterOptions: Array<CTFEvent["status"] | "all"> = ["all", "upcoming", "active", "past"];
+
 // Restyled Registration Modal
 const RegistrationModal = ({ event, onClose }: { event: CTFEvent, onClose: () => void }) => {
   const [formData, setFormData] = useState({ name: "", email: "", team_name: "" });
@@ -33,13 +35,12 @@ const RegistrationModal = ({ event, onClose }: { event: CTFEvent, onClose: () =>
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("registrations").insert([{
+      await submitRegistration({
         event_id: event.id,
         name: formData.name,
         email: formData.email,
         team_name: formData.team_name || null,
-      }]);
-      if (error) throw error;
+      });
       toast({
         title: "Registration Successful!",
         description: `You're registered for ${event.title}. Check your email for confirmation.`,
@@ -184,16 +185,10 @@ const Events = () => {
   const [filter, setFilter] = useState<"all" | "upcoming" | "active" | "past">("all");
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    const loadEvents = async () => {
       setLoading(true);
       try {
-        // FIX: Tell Supabase what type of data to expect to satisfy TypeScript
-        const { data, error } = await supabase
-          .from("events")
-          .select<"*", CTFEvent>("*")
-          .order("date", { ascending: false });
-
-        if (error) throw error;
+        const data = await fetchEventsApi();
         setEvents(data || []);
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -201,11 +196,10 @@ const Events = () => {
         setLoading(false);
       }
     };
-    fetchEvents();
+    loadEvents();
   }, []);
 
   const filteredEvents = events.filter(e => filter === "all" || e.status === filter);
-  const filterOptions = ["all", "upcoming", "active", "past"];
 
   return (
     <div className="relative text-gray-200">
@@ -223,7 +217,7 @@ const Events = () => {
           <div className="flex justify-center mb-8 sm:mb-10 md:mb-12 px-2 sm:px-0 overflow-x-auto">
             <div className="flex gap-1 sm:gap-2 bg-[#121224]/70 backdrop-blur-md rounded-lg p-1 sm:p-2 border border-blue-900/40 whitespace-nowrap">
               {filterOptions.map(option => (
-                <button key={option} onClick={() => setFilter(option as any)} className="relative px-3 sm:px-6 py-2 rounded-md font-mono text-xs sm:text-sm transition-colors text-gray-300 hover:text-white">
+                <button key={option} onClick={() => setFilter(option)} className="relative px-3 sm:px-6 py-2 rounded-md font-mono text-xs sm:text-sm transition-colors text-gray-300 hover:text-white">
                   {filter === option && (
                     <motion.div layoutId="filter-active" className="absolute inset-0 bg-green-500/30 rounded-md" />
                   )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Trash2, Calendar, X, ExternalLink, Clock, MapPin, Users, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { deleteEvent, fetchEvents, saveEvent } from "@/lib/api";
 
 interface Event {
   id: string;
@@ -63,19 +63,10 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
     registration_link: "",
   });
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: false });
-
-      if (error) throw error;
+      const data = await fetchEvents();
       setEvents((data as Event[]) || []);
     } catch (error) {
       toast({
@@ -86,7 +77,11 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,20 +101,13 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
       };
 
       if (editingEvent) {
-        const { error } = await supabase
-          .from("events")
-          .update(eventData)
-          .eq("id", editingEvent.id);
-
-        if (error) throw error;
+        await saveEvent(eventData, editingEvent.id);
         toast({
           title: "Success",
           description: "Event updated successfully",
         });
       } else {
-        const { error } = await supabase.from("events").insert([eventData]);
-
-        if (error) throw error;
+        await saveEvent(eventData);
         toast({
           title: "Success",
           description: "Event created successfully",
@@ -144,9 +132,7 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("events").delete().eq("id", id);
-
-      if (error) throw error;
+      await deleteEvent(id);
       toast({
         title: "Success",
         description: "Event deleted successfully",
