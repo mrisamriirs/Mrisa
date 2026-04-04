@@ -1,10 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { ObjectId } from "mongodb";
+import type { WithId } from "mongodb";
 import { getMongoDb } from "./_lib/mongo.js";
 import { getBearerToken, verifyAdminToken } from "./_lib/auth.js";
 
 interface WinnerDocument {
-  _id: unknown;
   event_id: string;
   player_name: string;
   team_name: string | null;
@@ -33,7 +33,7 @@ const readBody = async (req: IncomingMessage & { body?: unknown }) => {
   return raw ? JSON.parse(raw) : {};
 };
 
-const toWinner = (winner: WinnerDocument) => ({
+const toWinner = (winner: WithId<WinnerDocument>) => ({
   id: String(winner._id),
   event_id: winner.event_id,
   player_name: winner.player_name,

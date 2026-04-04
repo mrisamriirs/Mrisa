@@ -1,6 +1,12 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { ObjectId } from "mongodb";
 import { getMongoDb } from "./_lib/mongo.js";
+
+interface SeedMarkerDocument {
+  _id: string;
+  applied_at: string;
+  events_inserted: number;
+  winners_inserted: number;
+}
 
 const sendJson = (res: ServerResponse, statusCode: number, data: unknown) => {
   res.statusCode = statusCode;
@@ -32,7 +38,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     }
 
     const db = await getMongoDb();
-    const meta = db.collection("app_meta");
+    const meta = db.collection<SeedMarkerDocument>("app_meta");
     const seedMarkerId = "sample_seed_v1";
 
     const existingMarker = await meta.findOne({ _id: seedMarkerId });

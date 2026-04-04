@@ -1,10 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { ObjectId } from "mongodb";
+import type { WithId } from "mongodb";
 import { getMongoDb } from "./_lib/mongo.js";
 import { getBearerToken, verifyAdminToken } from "./_lib/auth.js";
 
 interface EventDocument {
-  _id: unknown;
   title: string;
   description: string;
   date: string;
@@ -36,7 +36,7 @@ const readBody = async (req: IncomingMessage & { body?: unknown }) => {
   return raw ? JSON.parse(raw) : {};
 };
 
-const toEvent = (event: EventDocument) => ({
+const toEvent = (event: WithId<EventDocument>) => ({
   id: String(event._id),
   title: event.title,
   description: event.description,
