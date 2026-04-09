@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Trash2, ExternalLink, Download, Search, CheckCircle, CreditCard, UserPlus, FileText, Save, Edit3, X } from "lucide-react";
+import { ArrowLeft, Trash2, ExternalLink, Download, Search, CheckCircle, CreditCard, UserPlus, FileText, Save, Edit3, X, Radio, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +35,7 @@ const DEFAULT_FORM_FIELDS: FormField[] = [
   { id: "semester", label: "Semester", type: "text", enabled: false, required: false, category: "University" },
 ];
 
-type MainTabType = "submissions" | "settings";
+type MainTabType = "submissions" | "settings" | "management";
 type FormTabType = "payment" | "participation" | "fields";
 
 export const RegistrationSubmissions = () => {
@@ -49,6 +49,7 @@ export const RegistrationSubmissions = () => {
   const [eventData, setEventData] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTogglingOpen, setIsTogglingOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   // View mode state
@@ -100,6 +101,29 @@ export const RegistrationSubmissions = () => {
       toast({ title: "Error", description: "Failed to save configuration", variant: "destructive" });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Instantly toggle registration open / closed and persist
+  const handleToggleRegistrationOpen = async () => {
+    if (!eventData) return;
+    setIsTogglingOpen(true);
+    const newState = !(eventData.registration_open ?? true);
+    try {
+      const updated = { ...formData, registration_open: newState };
+      await saveEvent(updated, eventId!);
+      setEventData((prev: any) => ({ ...prev, registration_open: newState }));
+      setFormData((prev: any) => ({ ...prev, registration_open: newState }));
+      toast({
+        title: newState ? "✅ Registration is now LIVE" : "🔒 Registration is now CLOSED",
+        description: newState
+          ? "Registrants can now sign up for this event."
+          : "The Register Now button is hidden from the public Events page.",
+      });
+    } catch {
+      toast({ title: "Error", description: "Failed to update registration status.", variant: "destructive" });
+    } finally {
+      setIsTogglingOpen(false);
     }
   };
 
@@ -239,20 +263,30 @@ export const RegistrationSubmissions = () => {
       </div>
 
       {/* Main tab bar */}
-      <div className="flex bg-[#121224]/70 p-1 rounded-xl border border-blue-900/40 w-max">
+      <div className="flex flex-wrap gap-1 bg-[#121224]/70 p-1 rounded-xl border border-blue-900/40 w-max">
         <Button
           variant="ghost"
           onClick={() => setActiveMainTab("submissions")}
-          className={`rounded-lg px-6 ${activeMainTab === 'submissions' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+          className={`rounded-lg px-5 ${activeMainTab === 'submissions' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
         >
           View Submissions
         </Button>
         <Button
           variant="ghost"
-          onClick={() => setActiveMainTab("settings")}
-          className={`rounded-lg px-6 ${activeMainTab === 'settings' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'}`}
+          onClick={() => setActiveMainTab("management")}
+          className={`rounded-lg px-5 flex items-center gap-2 ${activeMainTab === 'management' ? 'bg-orange-600 text-white' : 'text-gray-400 hover:text-white'}`}
         >
-          Registration Form Builder
+          <Radio className="w-4 h-4" />
+          Management
+          {/* Live status dot */}
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${(eventData?.registration_open ?? true) ? 'bg-green-400 animate-pulse' : 'bg-red-500'}`} />
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => setActiveMainTab("settings")}
+          className={`rounded-lg px-5 ${activeMainTab === 'settings' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'}`}
+        >
+          Form Builder
         </Button>
       </div>
 
@@ -378,6 +412,124 @@ export const RegistrationSubmissions = () => {
             </div>
           </motion.div>
 
+        ) : activeMainTab === 'management' ? (
+          /* ======= MANAGEMENT TAB ======= */
+          <motion.div key="management" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+
+            {/* ── Hero status card ──────────────────────────────── */}
+            <div className={`relative rounded-2xl border-2 overflow-hidden transition-colors duration-500 ${(formData.registration_open ?? true) ? 'border-green-500/60 bg-green-950/20' : 'border-red-500/40 bg-red-950/20'}`}>
+              {/* animated glow bar */}
+              <div className={`absolute top-0 left-0 right-0 h-1 transition-colors duration-500 ${(formData.registration_open ?? true) ? 'bg-gradient-to-r from-green-500 via-emerald-400 to-green-500 animate-pulse' : 'bg-red-600/60'}`} />
+
+              <div className="p-8 flex flex-col sm:flex-row items-center gap-8">
+                {/* Big icon */}
+                <div className={`w-24 h-24 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors duration-500 ${(formData.registration_open ?? true) ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                  {(formData.registration_open ?? true)
+                    ? <Unlock className="w-12 h-12 text-green-400" />
+                    : <Lock className="w-12 h-12 text-red-400" />
+                  }
+                </div>
+
+                {/* Status text */}
+                <div className="flex-1 text-center sm:text-left">
+                  <div className="flex items-center gap-3 justify-center sm:justify-start mb-2">
+                    <span className={`w-3 h-3 rounded-full flex-shrink-0 ${(formData.registration_open ?? true) ? 'bg-green-400 animate-pulse' : 'bg-red-500'}`} />
+                    <h3 className={`text-2xl font-bold tracking-tight ${(formData.registration_open ?? true) ? 'text-green-300' : 'text-red-300'}`}>
+                      Registration is {(formData.registration_open ?? true) ? 'LIVE 🟢' : 'CLOSED 🔴'}
+                    </h3>
+                  </div>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                    {(formData.registration_open ?? true)
+                      ? 'The "Register Now" button is visible on the Events page. New registrations are being accepted.'
+                      : 'The "Register Now" button is hidden from the public Events page. No new registrations will be accepted.'}
+                  </p>
+                </div>
+
+                {/* Toggle button */}
+                <div className="flex-shrink-0">
+                  <Button
+                    onClick={handleToggleRegistrationOpen}
+                    disabled={isTogglingOpen}
+                    className={`h-14 px-8 text-base font-bold rounded-xl transition-all duration-300 ${
+                      (formData.registration_open ?? true)
+                        ? 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/30'
+                        : 'bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-900/30'
+                    }`}
+                  >
+                    {isTogglingOpen
+                      ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</span>
+                      : (formData.registration_open ?? true)
+                        ? <span className="flex items-center gap-2"><Lock className="w-5 h-5" /> Close Registration</span>
+                        : <span className="flex items-center gap-2"><Unlock className="w-5 h-5" /> Open Registration</span>
+                    }
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Quick stats ──────────────────────────────────── */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-[#121224]/70 border border-blue-900/40 rounded-xl p-5 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-900/30 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{registrations.length}</p>
+                  <p className="text-gray-500 text-xs">Total Registrations</p>
+                </div>
+              </div>
+              <div className="bg-[#121224]/70 border border-blue-900/40 rounded-xl p-5 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-900/30 flex items-center justify-center">
+                  <UserPlus className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">
+                    {registrations.filter(r => r.registration_category === 'university').length}
+                  </p>
+                  <p className="text-gray-500 text-xs">University</p>
+                </div>
+              </div>
+              <div className="bg-[#121224]/70 border border-blue-900/40 rounded-xl p-5 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-violet-900/30 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-violet-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">
+                    {registrations.filter(r => r.registration_category === 'organization').length}
+                  </p>
+                  <p className="text-gray-500 text-xs">Organization</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── What this affects ─────────────────────────────── */}
+            <div className="bg-[#121224]/70 border border-blue-900/40 rounded-2xl p-6">
+              <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <Radio className="w-4 h-4 text-orange-400" />
+                What the toggle controls
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                {[
+                  { icon: '🎫', title: 'Register Now Button', desc: 'Hidden on event card when closed', live: true },
+                  { icon: '📋', title: 'Registration Form', desc: 'Shows "Registration Closed" page when closed', live: true },
+                  { icon: '📊', title: 'Submissions View', desc: 'Always accessible to admin', live: false },
+                  { icon: '⚙️', title: 'Form Builder & Settings', desc: 'Always accessible to admin', live: false },
+                ].map(item => (
+                  <div key={item.title} className="flex items-start gap-3 bg-[#1a1a2e]/50 rounded-xl p-3 border border-blue-900/20">
+                    <span className="text-xl flex-shrink-0">{item.icon}</span>
+                    <div>
+                      <p className="text-white text-sm font-medium">{item.title}</p>
+                      <p className="text-gray-500 text-xs mt-0.5">{item.desc}</p>
+                    </div>
+                    <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 ${item.live ? 'bg-orange-900/20 border-orange-500/30 text-orange-400' : 'bg-gray-800/50 border-gray-700/50 text-gray-500'}`}>
+                      {item.live ? 'Affected' : 'Always on'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
         ) : (
           /* ======= SETTINGS TAB ======= */
           <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
@@ -398,68 +550,128 @@ export const RegistrationSubmissions = () => {
                     </div>
                     {formData.registration_type === 'paid' && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-5">
-                        {/* QR Code Image - only for actual image */}
-                        <div className="border border-blue-900/40 rounded-xl bg-[#1a1a2e]/30 p-4 space-y-3">
+                        {/* ── QR Code Image ─────────────────────────── */}
+                        <div className="border border-blue-900/40 rounded-xl bg-[#1a1a2e]/30 p-4 space-y-4">
                           <div>
                             <Label className="text-gray-200 font-semibold text-sm block">QR Code Image</Label>
-                            <p className="text-gray-500 text-xs mt-0.5">The actual QR code image that registrants will scan (upload file or paste an image URL).</p>
+                            <p className="text-gray-500 text-xs mt-0.5">The QR image registrants will scan. Choose one method below.</p>
                           </div>
-                          {/* Preview — only when it looks like a real image */}
-                          {formData.payment_qr_url && (
-                            formData.payment_qr_url.startsWith('data:image') ||
-                            formData.payment_qr_url.startsWith('https://') ||
-                            formData.payment_qr_url.startsWith('http://')
-                          ) && (
-                            <div className="flex items-start gap-4">
-                              <div className="bg-white p-2 rounded-lg inline-block">
-                                <img
-                                  src={formData.payment_qr_url}
-                                  alt="QR Preview"
-                                  className="w-36 h-36 object-contain rounded"
-                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                />
-                              </div>
-                              <div className="flex-1 space-y-2">
-                                <p className="text-green-400 text-xs flex items-center gap-1">
-                                  <span className="w-2 h-2 bg-green-400 rounded-full inline-block" /> QR Image set
-                                </p>
-                                <button type="button" onClick={() => setFormData({ ...formData, payment_qr_url: '' })} className="text-red-400 text-xs hover:text-red-300 underline">
-                                  Remove
-                                </button>
-                              </div>
+
+                          {/* Method toggle */}
+                          <div className="flex bg-[#0f0f1e] rounded-lg p-1 border border-blue-900/30 w-max">
+                            <button
+                              type="button"
+                              onClick={() => setFormData((p: any) => ({ ...p, _qrMethod: 'upload' }))}
+                              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${(formData._qrMethod ?? 'upload') === 'upload' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                              📁 Upload File
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setFormData((p: any) => ({ ...p, _qrMethod: 'url' }))}
+                              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${formData._qrMethod === 'url' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                              🔗 Image URL
+                            </button>
+                          </div>
+
+                          {/* Upload option */}
+                          {(formData._qrMethod ?? 'upload') === 'upload' && (
+                            <div className="space-y-3">
+                              {formData.payment_qr_url?.startsWith('data:image') ? (
+                                /* Preview of uploaded file */
+                                <div className="flex items-start gap-4">
+                                  <div className="bg-white p-2 rounded-lg">
+                                    <img
+                                      src={formData.payment_qr_url}
+                                      alt="QR Preview"
+                                      className="w-36 h-36 object-contain rounded"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 pt-1">
+                                    <p className="text-green-400 text-xs flex items-center gap-1.5">
+                                      <span className="w-2 h-2 bg-green-400 rounded-full" /> File uploaded
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => setFormData((p: any) => ({ ...p, payment_qr_url: '' }))}
+                                      className="text-red-400 text-xs hover:text-red-300 underline"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                /* Upload drop zone */
+                                <label className="flex items-center gap-3 cursor-pointer border-2 border-dashed border-blue-900/60 hover:border-blue-500/50 rounded-xl p-5 bg-[#0f0f1e]/50 transition-colors group">
+                                  <div className="w-10 h-10 rounded-xl bg-blue-900/20 group-hover:bg-blue-900/40 flex items-center justify-center flex-shrink-0 transition-colors">
+                                    <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-300 text-sm font-medium">Click to upload QR image</p>
+                                    <p className="text-gray-600 text-xs">PNG, JPG, WEBP — max 2 MB</p>
+                                  </div>
+                                  <input
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      if (file.size > 2 * 1024 * 1024) { alert('File too large. Max 2 MB.'); return; }
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        setFormData((prev: any) => ({ ...prev, payment_qr_url: ev.target?.result as string }));
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }}
+                                  />
+                                </label>
+                              )}
                             </div>
                           )}
-                          <div>
-                            <Label className="text-gray-400 text-xs mb-1 block">Upload QR Image file (PNG/JPG)</Label>
-                            <label className="flex items-center gap-3 cursor-pointer border border-dashed border-blue-900/60 hover:border-blue-500/60 rounded-xl p-4 bg-[#0f0f1e]/50 transition-colors group">
-                              <div className="w-10 h-10 rounded-xl bg-blue-900/20 group-hover:bg-blue-900/40 flex items-center justify-center flex-shrink-0 transition-colors">
-                                <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                              </div>
-                              <div>
-                                <p className="text-gray-300 text-sm">{formData.payment_qr_url?.startsWith('data:') ? '✓ Image file uploaded' : 'Click to upload QR image'}</p>
-                                <p className="text-gray-600 text-xs">PNG, JPG up to 2MB</p>
-                              </div>
-                              <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  if (file.size > 2 * 1024 * 1024) { alert('File too large. Please use an image under 2MB.'); return; }
-                                  const reader = new FileReader();
-                                  reader.onload = (ev) => { setFormData((prev: any) => ({ ...prev, payment_qr_url: ev.target?.result as string })); };
-                                  reader.readAsDataURL(file);
-                                }}
+
+                          {/* URL option */}
+                          {formData._qrMethod === 'url' && (
+                            <div className="space-y-2">
+                              {/* Preview of URL image */}
+                              {formData.payment_qr_url && !formData.payment_qr_url.startsWith('data:') && (
+                                formData.payment_qr_url.startsWith('https://') || formData.payment_qr_url.startsWith('http://')
+                              ) && (
+                                <div className="flex items-start gap-4">
+                                  <div className="bg-white p-2 rounded-lg">
+                                    <img
+                                      src={formData.payment_qr_url}
+                                      alt="QR Preview"
+                                      className="w-36 h-36 object-contain rounded"
+                                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
+                                  </div>
+                                  <div className="space-y-2 pt-1">
+                                    <p className="text-green-400 text-xs flex items-center gap-1.5">
+                                      <span className="w-2 h-2 bg-green-400 rounded-full" /> Image URL set
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => setFormData((p: any) => ({ ...p, payment_qr_url: '' }))}
+                                      className="text-red-400 text-xs hover:text-red-300 underline"
+                                    >
+                                      Clear
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                              <Input
+                                placeholder="https://i.imgur.com/your-qr-code.png"
+                                value={formData.payment_qr_url?.startsWith('data:') ? '' : (formData.payment_qr_url || '')}
+                                onChange={e => setFormData({ ...formData, payment_qr_url: e.target.value })}
+                                className="bg-[#1a1a2e]/50 border-blue-900/40 text-white text-sm"
                               />
-                            </label>
-                          </div>
-                          <div>
-                            <Label className="text-gray-400 text-xs mb-1 block">Or paste QR image URL <span className="text-gray-600">(must end in .png / .jpg or be a direct image link)</span></Label>
-                            <Input
-                              placeholder="https://i.imgur.com/your-qr.png"
-                              value={formData.payment_qr_url?.startsWith('data:') ? '' : (formData.payment_qr_url || '')}
-                              onChange={e => setFormData({ ...formData, payment_qr_url: e.target.value })}
-                              className="bg-[#1a1a2e]/50 border-blue-900/40 text-white text-sm"
-                            />
-                          </div>
+                              <p className="text-gray-600 text-xs">Must be a direct image link (e.g. i.imgur.com, drive.google.com/uc...)</p>
+                            </div>
+                          )}
                         </div>
 
                         {/* Payment Link — completely separate from QR image */}

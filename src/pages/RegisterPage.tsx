@@ -181,8 +181,85 @@ const RegisterPage = () => {
     );
   }
 
+  // --- REGISTRATION CLOSED ---
+  if (event.registration_open === false) {
+    return (
+      <div className="relative min-h-screen bg-[#0a0a14] flex items-center justify-center px-4">
+        <div className="fixed inset-0 z-0"><Scene3D /></div>
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative z-10 text-center max-w-lg w-full"
+        >
+          {/* Closed icon */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.15, type: "spring", stiffness: 200 }}
+            className="w-28 h-28 mx-auto mb-6 rounded-2xl bg-red-900/20 border border-red-500/30 flex items-center justify-center"
+          >
+            <svg className="w-14 h-14 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </motion.div>
+
+          <h1 className="text-3xl font-bold text-white mb-3">Registration Closed</h1>
+          <p className="text-gray-400 mb-2 leading-relaxed">
+            Registrations for{" "}
+            <span className="text-red-400 font-semibold">{event.title}</span>{" "}
+            are currently closed.
+          </p>
+          <p className="text-gray-600 text-sm mb-8">
+            Please check back later or contact the organiser for more information.
+          </p>
+
+          {/* Event card preview */}
+          <div className="bg-[#121224]/80 backdrop-blur-md border border-red-900/30 rounded-2xl p-5 mb-8 text-left">
+            <div className="flex items-center gap-3 mb-3">
+              {event.image_url && (
+                <img src={event.image_url} alt={event.title}
+                  className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              )}
+              <div>
+                <h2 className="text-white font-bold text-lg leading-tight">{event.title}</h2>
+                <span className="text-xs text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full">
+                  🔒 Registration Closed
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="bg-[#1a1a2e]/60 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Date</p>
+                <p className="text-white text-sm font-medium mt-0.5">{event.date}</p>
+              </div>
+              <div className="bg-[#1a1a2e]/60 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Time</p>
+                <p className="text-white text-sm font-medium mt-0.5">{event.time}</p>
+              </div>
+              <div className="bg-[#1a1a2e]/60 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Status</p>
+                <p className="text-white text-sm font-medium mt-0.5 capitalize">{event.status}</p>
+              </div>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => navigate("/events")}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-8 py-3"
+          >
+            ← Back to Events
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   // --- SUCCESS ---
   if (submitted) {
+
     return (
       <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center px-4">
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center max-w-md">
@@ -277,7 +354,11 @@ const RegisterPage = () => {
                       )}
                       <span className="bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 text-green-400 text-xs flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-                        {liveCount === null ? '...' : liveCount} Registered
+                        {liveCount === null ? '...' : liveCount}{" "}
+                        registered{" "}
+                        {event.participation_type === "team"
+                          ? `team${liveCount !== 1 ? "s" : ""}`
+                          : "solo"}
                       </span>
                     </div>
                   </div>

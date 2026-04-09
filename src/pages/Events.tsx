@@ -17,6 +17,8 @@ interface CTFEvent {
   image_url: string | null;
   attendees: number;
   registration_link?: string;
+  participation_type?: "solo" | "team";
+  registration_open?: boolean;
 }
 
 const filterOptions: Array<CTFEvent["status"] | "all"> = ["all", "upcoming", "active", "past"];
@@ -113,7 +115,10 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
               <span className="text-gray-600">Loading...</span>
             ) : (
               <span className="text-purple-300 font-semibold">
-                {liveCount} <span className="text-gray-500 font-normal">registered</span>
+                {liveCount}{" "}
+                <span className="text-gray-500 font-normal">
+                  registered {event.participation_type === "team" ? "team" + (liveCount !== 1 ? "s" : "") : "solo"}
+                </span>
               </span>
             )}
           </div>
@@ -121,7 +126,13 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
 
         {/* Action button */}
         <div style={{ transform: "translateZ(30px)" }}>
-          {event.status === "upcoming" ? (
+          {/* Registration Closed — override everything */}
+          {(event.registration_open === false) ? (
+            <div className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl h-10 flex items-center justify-center gap-2 text-xs text-gray-500">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              Registration Closed
+            </div>
+          ) : event.status === "upcoming" ? (
             <Button onClick={handleRegister} className="w-full bg-green-500 text-black hover:bg-green-400 h-9 sm:h-10 text-xs sm:text-sm font-bold">
               Register Now
             </Button>

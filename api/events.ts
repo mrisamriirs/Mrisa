@@ -14,6 +14,7 @@ interface EventDocument {
   attendees: number;
   image_url: string | null;
   registration_link: string | null;
+  registration_open?: boolean;           // ← live / closed toggle
   // Registration config
   registration_type?: "paid" | "unpaid";
   payment_qr_url?: string | null;
@@ -57,6 +58,7 @@ const toEvent = (event: WithId<EventDocument>) => ({
   attendees: event.attendees ?? 0,
   image_url: event.image_url ?? null,
   registration_link: event.registration_link ?? null,
+  registration_open: event.registration_open ?? true,  // default open
   // Registration config fields – pass through as-is
   registration_type: event.registration_type ?? "unpaid",
   payment_qr_url: event.payment_qr_url ?? null,
@@ -105,6 +107,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
         attendees: Number.isFinite(Number(body.attendees)) ? Number(body.attendees) : 0,
         image_url: body.image_url ? String(body.image_url).trim() : null,
         registration_link: body.registration_link ? String(body.registration_link).trim() : null,
+        registration_open: body.registration_open !== false,   // default true
         // Registration config
         registration_type: body.registration_type === "paid" ? "paid" : "unpaid",
         payment_qr_url: body.payment_qr_url ? String(body.payment_qr_url) : null,
@@ -145,6 +148,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
         attendees: Number.isFinite(Number(body.attendees)) ? Number(body.attendees) : 0,
         image_url: body.image_url ? String(body.image_url).trim() : null,
         registration_link: body.registration_link ? String(body.registration_link).trim() : null,
+        registration_open: body.registration_open !== false,   // default true
         // Registration config – always overwrite so admin config saves correctly
         registration_type: body.registration_type === "paid" ? "paid" : "unpaid",
         payment_qr_url: body.payment_qr_url ? String(body.payment_qr_url) : null,
