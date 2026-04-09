@@ -61,7 +61,7 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
     if (event.registration_link) {
       window.open(event.registration_link, "_blank");
     } else {
-      window.open(/register/, "_blank");
+      window.open(`/register/${event.id}`, "_blank");
     }
   };
 
@@ -71,7 +71,7 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      className={elative bg-[#121224]/70 backdrop-blur-md rounded-xl border  transition-shadow duration-300 hover:shadow-2xl hover:shadow-green-500/10 overflow-hidden flex flex-col}
+      className={`relative bg-[#121224]/70 backdrop-blur-md rounded-xl border ${style.border} transition-shadow duration-300 hover:shadow-2xl hover:shadow-green-500/10 overflow-hidden flex flex-col`}
     >
       {/* Event Image */}
       <div className="relative h-32 sm:h-40 overflow-hidden bg-[#0a0a14] flex-shrink-0">
@@ -84,8 +84,8 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-[#121224] via-transparent to-transparent" />
         {/* Status badge overlaid on image */}
         <div className="absolute top-3 right-3">
-          <span className={lex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full border border-white/10 backdrop-blur-sm }>
-            <span className={w-1.5 h-1.5 rounded-full  animate-pulse} />
+          <span className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full border border-white/10 backdrop-blur-sm ${style.badge}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${style.dot} animate-pulse`} />
             {event.status}
           </span>
         </div>
