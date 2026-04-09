@@ -42,7 +42,7 @@ export const RegistrationPage = () => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.05 }}
-              onClick={() => navigate(`/admin/registrations/${event.id}`)}
+              onClick={() => navigate(`/admin/submissions/${event.id}`)}
               className="bg-[#0b0b14]/80 backdrop-blur-md rounded-2xl p-5 border border-blue-900/40 hover:border-blue-500/60 transition-all cursor-pointer group hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] flex flex-col justify-between"
             >
               <div className="flex justify-between items-start mb-4">

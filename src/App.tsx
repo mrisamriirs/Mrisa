@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import RegistrationPage from "./pages/RegistrationPage";
 import NotFound from "./pages/NotFound";
 import { RegistrationSubmissions } from "@/components/RegistrationSubmissions";
+import { AdminLayout } from "@/components/AdminLayout";
 
 const queryClient = new QueryClient();
 
@@ -67,7 +68,9 @@ const AppContent = () => {
           path="/admin/submissions/:eventId"
           element={
             <ProtectedRoute>
-              <RegistrationSubmissions />
+              <AdminLayout title="Registrations">
+                <RegistrationSubmissions />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />

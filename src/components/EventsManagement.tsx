@@ -58,12 +58,11 @@ interface Event {
 }
 
 type TabType = "all" | "upcoming" | "active" | "past";
-type FormTabType = "basic" | "payment" | "participation" | "fields";
+
 
 export const EventsManagement = ({ showForm: externalShowForm, setShowForm: externalSetShowForm }: { showForm?: boolean; setShowForm?: (val: boolean) => void } = {}) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>("all");
-  const [activeFormTab, setActiveFormTab] = useState<FormTabType>("basic");
   const [internalShowForm, setInternalShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -148,7 +147,7 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
       ...event,
       form_fields: event.form_fields && event.form_fields.length > 0 ? event.form_fields : JSON.parse(JSON.stringify(DEFAULT_FORM_FIELDS))
     });
-    setActiveFormTab("basic");
+
     setShowForm(true);
   };
 
@@ -194,98 +193,18 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
                 <button onClick={() => !isLoading && resetForm()} className="text-gray-400 hover:text-white"><X className="h-6 w-6" /></button>
               </div>
 
-              {/* Form Navigation */}
-              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                <Button variant="ghost" onClick={() => setActiveFormTab('basic')} className={`text-sm ${activeFormTab === 'basic' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}`}><Settings className="w-4 h-4 mr-2"/>Basic Info</Button>
-                <Button variant="ghost" onClick={() => setActiveFormTab('payment')} className={`text-sm ${activeFormTab === 'payment' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}`}><CreditCard className="w-4 h-4 mr-2"/>Payment</Button>
-                <Button variant="ghost" onClick={() => setActiveFormTab('participation')} className={`text-sm ${activeFormTab === 'participation' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}`}><UserPlus className="w-4 h-4 mr-2"/>Participation</Button>
-                <Button variant="ghost" onClick={() => setActiveFormTab('fields')} className={`text-sm ${activeFormTab === 'fields' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}`}><FileText className="w-4 h-4 mr-2"/>Form Fields</Button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-2 space-y-6">
-                
-                {activeFormTab === 'basic' && (
-                  <div className="space-y-4">
-                    <div><Label className="text-gray-300">Title</Label><Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                    <div><Label className="text-gray-300">Description</Label><Textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div><Label className="text-gray-300">Date</Label><Input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 " /></div>
-                      <div><Label className="text-gray-300">Time</Label><Input required type="time" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40" /></div>
-                    </div>
-                    <div><Label className="text-gray-300">Location</Label><Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                    <div><Label className="text-gray-300">Banner URL</Label><Input value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div><Label className="text-gray-300">Status</Label><select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as any})} className="mt-2 w-full px-3 py-2 bg-[#1a1a2e] border border-blue-900/40 rounded-lg"><option value="upcoming">Upcoming</option><option value="active">Active</option><option value="past">Past</option></select></div>
-                    </div>
-                  </div>
-                )}
-
-                {activeFormTab === 'payment' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 border border-blue-900/40 p-4 rounded-xl bg-[#1a1a2e]/50">
-                      <Label className="text-white flex-1 text-base">Is this a paid event?</Label>
-                      <Switch checked={formData.registration_type === 'paid'} onCheckedChange={(c) => setFormData({...formData, registration_type: c ? 'paid' : 'unpaid'})} />
-                    </div>
-                    {formData.registration_type === 'paid' && (
-                      <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto'}} className="space-y-4">
-                        <div><Label className="text-gray-300">Payment QR Code URL</Label><Input placeholder="https://..." value={formData.payment_qr_url} onChange={e => setFormData({...formData, payment_qr_url: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                        <div><Label className="text-gray-300">Payment Instructions</Label><Textarea placeholder="UPI ID: mr@ybl etc." value={formData.payment_instructions} onChange={e => setFormData({...formData, payment_instructions: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                      </motion.div>
-                    )}
-                  </div>
-                )}
-
-                {activeFormTab === 'participation' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 border border-blue-900/40 p-4 rounded-xl bg-[#1a1a2e]/50">
-                       <div className="flex-1">
-                         <Label className="text-white text-base block">Allow Team Participation?</Label>
-                         <p className="text-gray-400 text-xs">Switch to enable team sizes.</p>
-                       </div>
-                      <Switch checked={formData.participation_type === 'team'} onCheckedChange={(c) => setFormData({...formData, participation_type: c ? 'team' : 'solo'})} />
-                    </div>
-                    {formData.participation_type === 'team' && (
-                      <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto'}} className="space-y-4">
-                         <div className="grid grid-cols-2 gap-4">
-                           <div><Label className="text-gray-300">Min Members</Label><Input type="number" min="1" value={formData.team_min_members} onChange={e => setFormData({...formData, team_min_members: parseInt(e.target.value)})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                           <div><Label className="text-gray-300">Max Members</Label><Input type="number" min="1" value={formData.team_max_members} onChange={e => setFormData({...formData, team_max_members: parseInt(e.target.value)})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                         </div>
-                         <div className="flex items-center space-x-2">
-                            <Switch checked={formData.team_enforce_details} onCheckedChange={(c) => setFormData({...formData, team_enforce_details: c})} />
-                            <Label className="text-gray-300 flex-1">Enforce Member Details (All team members must fill out the form fields)</Label>
-                         </div>
-                      </motion.div>
-                    )}
-                  </div>
-                )}
-
-                {activeFormTab === 'fields' && (
-                  <div className="space-y-6">
-                    <p className="text-gray-400 text-sm">Configure what details you want to collect during registration. "Name" and "Email" are recommended to always remain enabled.</p>
-                    {(['Common', 'Organization', 'University'] as const).map(category => (
-                      <div key={category} className="border border-blue-900/40 rounded-xl bg-[#1a1a2e]/30 overflow-hidden">
-                        <div className="bg-blue-900/20 px-4 py-3"><h4 className="font-bold text-blue-300">{category} Fields</h4></div>
-                        <div className="divide-y divide-blue-900/20">
-                          {formData.form_fields?.filter(f => f.category === category).map((field) => (
-                            <div key={field.id} className="p-4 flex items-center justify-between hover:bg-[#1a1a2e]/60 transition-colors">
-                              <div className="flex-1">
-                                <Label className="text-white text-base">{field.label}</Label>
-                              </div>
-                              <div className="flex items-center gap-6">
-                                <div className="flex items-center gap-2">
-                                  <Switch checked={field.enabled} onCheckedChange={() => toggleField(field.id, 'enabled')} id={`enable-${field.id}`}/> <Label htmlFor={`enable-${field.id}`} className="w-12 text-xs text-gray-400">Enable</Label>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Switch checked={field.required} disabled={!field.enabled} onCheckedChange={() => toggleField(field.id, 'required')} id={`req-${field.id}`}/> <Label htmlFor={`req-${field.id}`} className="w-12 text-xs text-gray-400">Required</Label>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-2 space-y-4">
+                <div><Label className="text-gray-300">Title</Label><Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
+                <div><Label className="text-gray-300">Description</Label><Textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label className="text-gray-300">Date</Label><Input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 " /></div>
+                  <div><Label className="text-gray-300">Time</Label><Input required type="time" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40" /></div>
+                </div>
+                <div><Label className="text-gray-300">Location</Label><Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
+                <div><Label className="text-gray-300">Banner URL</Label><Input value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label className="text-gray-300">Status</Label><select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as any})} className="mt-2 w-full px-3 py-2 bg-[#1a1a2e] border border-blue-900/40 rounded-lg"><option value="upcoming">Upcoming</option><option value="active">Active</option><option value="past">Past</option></select></div>
+                </div>
 
                 <div className="flex gap-4 pt-4 border-t border-blue-900/40 mt-4">
                   <Button type="submit" disabled={isLoading} className="flex-1 bg-green-500 hover:bg-green-400 text-black">
