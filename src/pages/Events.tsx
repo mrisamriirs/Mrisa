@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Scene3D } from "@/components/Scene3D";
-import { fetchEvents as fetchEventsApi, submitRegistration } from "@/lib/api";
+import { fetchEvents as fetchEventsApi } from "@/lib/api";
+import { DynamicRegistrationModal } from "@/components/DynamicRegistrationModal";
 
 interface CTFEvent {
   id: string;
@@ -25,65 +26,7 @@ interface CTFEvent {
 
 const filterOptions: Array<CTFEvent["status"] | "all"> = ["all", "upcoming", "active", "past"];
 
-// Restyled Registration Modal
-const RegistrationModal = ({ event, onClose }: { event: CTFEvent, onClose: () => void }) => {
-  const [formData, setFormData] = useState({ name: "", email: "", team_name: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await submitRegistration({
-        event_id: event.id,
-        name: formData.name,
-        email: formData.email,
-        team_name: formData.team_name || null,
-      });
-      toast({
-        title: "Registration Successful!",
-        description: `You're registered for ${event.title}. Check your email for confirmation.`,
-      });
-      onClose(); // Close modal on success
-    } catch (error) {
-      toast({
-        title: "Registration Failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <DialogContent className="bg-[#121224]/70 backdrop-blur-md border border-blue-900/40 text-gray-200 p-4 sm:p-6 md:p-8">
-      <DialogHeader>
-        <DialogTitle className="text-lg sm:text-xl md:text-2xl font-sans text-green-400 line-clamp-2">
-          Register for: {event.title}
-        </DialogTitle>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 pt-3 sm:pt-4">
-        <div>
-          <Label htmlFor="name" className="text-xs sm:text-sm">Name *</Label>
-          <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="mt-1 sm:mt-2 text-sm sm:text-base h-9 sm:h-10" />
-        </div>
-        <div>
-          <Label htmlFor="email" className="text-xs sm:text-sm">Email *</Label>
-          <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required className="mt-1 sm:mt-2 text-sm sm:text-base h-9 sm:h-10" />
-        </div>
-        <div>
-          <Label htmlFor="team_name" className="text-xs sm:text-sm">Team Name (Optional)</Label>
-          <Input id="team_name" value={formData.team_name} onChange={(e) => setFormData({ ...formData, team_name: e.target.value })} className="mt-1 sm:mt-2 text-sm sm:text-base h-9 sm:h-10" />
-        </div>
-        <Button type="submit" disabled={isSubmitting} className="w-full bg-green-500 text-black hover:bg-green-400 h-9 sm:h-10 text-sm sm:text-base">
-          {isSubmitting ? "Submitting..." : "Confirm Registration"}
-        </Button>
-      </form>
-    </DialogContent>
-  );
-};
+// Using Dynamic Registration Modal from components
 
 // 3D Interactive Event Card
 const EventCard = ({ event }: { event: CTFEvent }) => {
@@ -169,7 +112,7 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
           </div>
         </div>
       </motion.div>
-      <RegistrationModal event={event} onClose={() => setIsModalOpen(false)} />
+      {isModalOpen && <DynamicRegistrationModal event={event} onClose={() => setIsModalOpen(false)} />}
     </Dialog>
   );
 };

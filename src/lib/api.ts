@@ -62,6 +62,20 @@ export interface EventRecord {
   attendees: number;
   image_url?: string | null;
   registration_link?: string | null;
+  registration_type?: "paid" | "unpaid";
+  payment_qr_url?: string | null;
+  payment_instructions?: string | null;
+  participation_type?: "solo" | "team";
+  team_min_members?: number | null;
+  team_max_members?: number | null;
+  team_enforce_details?: boolean | null;
+  form_fields?: Array<{
+    id: string;
+    label: string;
+    type: string;
+    enabled: boolean;
+    required: boolean;
+  }> | null;
   created_at: string;
   updated_at: string;
 }
@@ -84,11 +98,13 @@ export interface ContactMessageInput {
   message: string;
 }
 
-export interface RegistrationInput {
+export type RegistrationInput = Record<string, any>;
+
+export interface RegistrationRecord {
+  id: string;
   event_id: string;
-  name: string;
-  email: string;
-  team_name?: string | null;
+  created_at: string;
+  [key: string]: any;
 }
 
 export interface AdminSession {
@@ -166,6 +182,17 @@ export async function submitRegistration(input: RegistrationInput): Promise<void
     method: "POST",
     auth: false,
     body: JSON.stringify(input),
+  });
+}
+
+export async function fetchRegistrations(eventId?: string): Promise<RegistrationRecord[]> {
+  const url = eventId ? `/registrations?event_id=${encodeURIComponent(eventId)}` : "/registrations";
+  return apiRequest<RegistrationRecord[]>(url, { method: "GET" });
+}
+
+export async function deleteRegistration(id: string): Promise<void> {
+  await apiRequest<{ ok: true }>(`/registrations?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
   });
 }
 
