@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Users, CreditCard, CheckCircle, Building2, GraduationCap, Calendar, Clock, MapPin, ArrowRight, ExternalLink } from "lucide-react";
@@ -365,7 +365,7 @@ const RegisterPage = () => {
                     <div className="flex flex-wrap gap-2 mt-4">
                       {isTeam && (
                         <span className="bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-500/30 text-blue-400 flex items-center gap-1.5 text-xs">
-                          <Users className="w-3 h-3" /> Team ({numTeamMembers}â€“{maxTeamMembers} members)
+                          <Users className="w-3 h-3" /> Team ({numTeamMembers}-{maxTeamMembers} members)
                         </span>
                       )}
                       {event.registration_type === "paid" && (
