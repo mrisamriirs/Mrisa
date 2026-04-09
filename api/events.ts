@@ -6,6 +6,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   res.setHeader("Content-Type", "application/json");
   const db = await getMongoDb();
   const col = db?.collection("events");
+  const url = new URL(req.url || "", "http://localhost");
+  const q = Object.fromEntries(url.searchParams.entries());
 
   if (req.method === "GET") {
     if (!col) return res.end("[]");
@@ -15,9 +17,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     } catch { return res.end("[]"); }
   }
 
-  // Security removed per request: no verifyToken check
   if (!col) { res.statusCode = 503; return res.end('{"error":"No DB"}'); }
-
   let body: any = {};
   try { let r = ""; for await (const c of req) r += c; body = JSON.parse(r || "{}"); } catch { }
 
@@ -28,14 +28,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return res.end('{"ok":true}');
   }
   if (req.method === "PUT") {
-    const id = body.id || (req as any).query?.id;
+    const id = body.id || q.id;
     if (!id) return res.end('{"error":"No ID"}');
     const update = { ...body }; delete update.id; delete update._id;
     await col.updateOne({ _id: new ObjectId(id) }, { $set: update });
     return res.end('{"ok":true}');
   }
   if (req.method === "DELETE") {
-    const id = (req as any).query?.id || body.id;
+    const id = q.id || body.id;
     if (!id) return res.end('{"error":"No ID"}');
     await col.deleteOne({ _id: new ObjectId(id) });
     return res.end('{"ok":true}');

@@ -1,12 +1,16 @@
 ﻿import type { IncomingMessage, ServerResponse } from "http";
 import { ObjectId } from "mongodb";
 import { getMongoDb } from "./_lib/mongo.js";
+import { verifyToken } from "./_lib/auth.js";
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   res.setHeader("Content-Type", "application/json");
   const db = await getMongoDb();
   const col = db?.collection("registrations");
-  const q = (req as any).query || {};
+  
+  // Robust query parsing for portability
+  const url = new URL(req.url || "", "http://localhost");
+  const q = Object.fromEntries(url.searchParams.entries());
 
   if (req.method === "GET") {
     if (!col) return res.end(q.count ? '{"count":0}' : "[]");
@@ -14,11 +18,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     if (q.event_id) filter.event_id = q.event_id;
 
     if (q.count) {
+      try {
         const count = await col.countDocuments(filter);
         return res.end(JSON.stringify({ count }));
+      } catch { return res.end('{"count":0}'); }
     }
 
-    // Security removed: allow viewing submissions without 401
     try {
       const items = await col.find(filter).sort({ created_at: -1 }).toArray();
       return res.end(JSON.stringify(items.map(i => ({ ...i, id: i._id.toString() }))));
@@ -40,7 +45,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
 
   if (req.method === "DELETE") {
-    // Security removed: allow deleting registrations for cleanup during test
     if (col && q.id) await col.deleteOne({ _id: new ObjectId(q.id) });
     return res.end('{"ok":true}');
   }
