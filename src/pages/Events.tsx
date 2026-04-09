@@ -61,7 +61,7 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
     if (event.registration_link) {
       window.open(event.registration_link, "_blank");
     } else {
-      window.open(`/register/${event.id}`, "_blank");
+      window.open(/register/, "_blank");
     }
   };
 
@@ -71,7 +71,7 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      className={`relative bg-[#121224]/70 backdrop-blur-md rounded-xl border ${style.border} transition-shadow duration-300 hover:shadow-2xl hover:shadow-green-500/10 overflow-hidden flex flex-col`}
+      className={elative bg-[#121224]/70 backdrop-blur-md rounded-xl border  transition-shadow duration-300 hover:shadow-2xl hover:shadow-green-500/10 overflow-hidden flex flex-col}
     >
       {/* Event Image */}
       <div className="relative h-32 sm:h-40 overflow-hidden bg-[#0a0a14] flex-shrink-0">
@@ -84,8 +84,8 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-[#121224] via-transparent to-transparent" />
         {/* Status badge overlaid on image */}
         <div className="absolute top-3 right-3">
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full border border-white/10 backdrop-blur-sm ${style.badge}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${style.dot} animate-pulse`} />
+          <span className={lex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full border border-white/10 backdrop-blur-sm }>
+            <span className={w-1.5 h-1.5 rounded-full  animate-pulse} />
             {event.status}
           </span>
         </div>
@@ -127,7 +127,7 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
 
         {/* Action button */}
         <div style={{ transform: "translateZ(30px)" }}>
-          {/* Registration Closed â€” override everything */}
+          {/* Registration Closed Cases */}
           {(event.registration_open === false) ? (
             <div className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl h-10 flex items-center justify-center gap-2 text-xs text-gray-500">
               <span className="w-2 h-2 rounded-full bg-red-500" />
@@ -145,7 +145,7 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
             </Link>
           ) : event.status === "active" ? (
             <Button onClick={handleRegister} className="w-full bg-blue-500 text-white hover:bg-blue-400 h-9 sm:h-10 text-xs sm:text-sm font-bold animate-pulse">
-              Join Now â€” Live!
+              Register Now
             </Button>
           ) : null}
         </div>
@@ -244,5 +244,3 @@ const Events = () => {
 };
 
 export default Events;
-
-
