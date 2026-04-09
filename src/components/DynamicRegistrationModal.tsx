@@ -63,7 +63,7 @@ export const DynamicRegistrationModal = ({ event, onClose }: { event: any, onClo
       });
       toast({
         title: "Registration Successful!",
-        description: \`You're registered for \${event.title}.\`,
+        description: `You're registered for ${event.title}.`,
       });
       onClose();
     } catch (error) {
@@ -128,7 +128,7 @@ export const DynamicRegistrationModal = ({ event, onClose }: { event: any, onClo
           {membersData.map((_, index) => (
              <div key={index} className="bg-[#1a1a2e]/30 border border-blue-900/40 p-5 rounded-xl space-y-4">
                 <div className="flex justify-between items-center mb-2 pb-2 border-b border-blue-900/20">
-                  <h4 className="font-bold text-blue-400">{isTeam ? \`Team Member \${index + 1}\` : 'Your Details'}{index === 0 && ' (Primary Contact)'}</h4>
+                  <h4 className="font-bold text-blue-400">{isTeam ? `Team Member ${index + 1}` : 'Your Details'}{index === 0 && ' (Primary Contact)'}</h4>
                   {isTeam && index >= numTeamMembers && (
                     <Button type="button" variant="destructive" size="sm" onClick={() => removeMember(index)} className="h-7 text-xs">Remove</Button>
                   )}

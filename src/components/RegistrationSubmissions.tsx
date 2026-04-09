@@ -78,7 +78,7 @@ export const RegistrationSubmissions = () => {
       const row = [
          reg.id, 
          new Date(reg.created_at).toLocaleString(),
-         reg.team_name ? \`"\${reg.team_name}"\` : "N/A",
+         reg.team_name ? `"${reg.team_name}"` : "N/A",
          reg.payment_proof_url || "N/A"
       ];
       
@@ -86,7 +86,7 @@ export const RegistrationSubmissions = () => {
       
       dynamicHeadersArray.forEach(header => {
          const val = primaryData[header] || "";
-         row.push(\`"\${val}"\`);
+         row.push(`"${val}"`);
       });
       csvContent += row.join(",") + "\\r\\n";
     });
@@ -94,14 +94,14 @@ export const RegistrationSubmissions = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", \`submissions_\${eventId}.csv\`);
+    link.setAttribute("download", `submissions_${eventId}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const filtered = registrations.filter(r => {
-      const searchStr = \`\${r.name} \${r.email} \${r.team_name} \${r.id}\`.toLowerCase();
+      const searchStr = `${r.name} ${r.email} ${r.team_name} ${r.id}`.toLowerCase();
       return searchStr.includes(searchTerm.toLowerCase());
   });
 
@@ -114,7 +114,7 @@ export const RegistrationSubmissions = () => {
            </Button>
            <div>
              <h2 className="text-2xl font-bold text-white tracking-tight">Submissions</h2>
-             <p className="text-gray-400 text-sm">{eventData?.title ? \`For: \${eventData.title}\` : 'Loading event...'}</p>
+             <p className="text-gray-400 text-sm">{eventData?.title ? `For: ${eventData.title}` : 'Loading event...'}</p>
            </div>
         </div>
         <div className="flex gap-2">

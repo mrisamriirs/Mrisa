@@ -178,7 +178,7 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
       <motion.div className="flex flex-wrap gap-1 sm:gap-2 bg-[#1a1a2e]/50 p-2 rounded-xl border border-blue-900/40 overflow-x-auto">
         {(["all", "upcoming", "active", "past"] as TabType[]).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={\`px-4 py-2 rounded-lg font-semibold transition-all capitalize text-sm whitespace-nowrap \${activeTab === tab ? "bg-gradient-to-r from-green-500 to-emerald-500 text-black shadow-lg" : "text-gray-400 hover:text-white"}\`}>
+            className={`px-4 py-2 rounded-lg font-semibold transition-all capitalize text-sm whitespace-nowrap ${activeTab === tab ? "bg-gradient-to-r from-green-500 to-emerald-500 text-black shadow-lg" : "text-gray-400 hover:text-white"}`}>
             {tab}
           </button>
         ))}
@@ -196,10 +196,10 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
 
               {/* Form Navigation */}
               <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                <Button variant="ghost" onClick={() => setActiveFormTab('basic')} className={\`text-sm \${activeFormTab === 'basic' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}\`}><Settings className="w-4 h-4 mr-2"/>Basic Info</Button>
-                <Button variant="ghost" onClick={() => setActiveFormTab('payment')} className={\`text-sm \${activeFormTab === 'payment' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}\`}><CreditCard className="w-4 h-4 mr-2"/>Payment</Button>
-                <Button variant="ghost" onClick={() => setActiveFormTab('participation')} className={\`text-sm \${activeFormTab === 'participation' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}\`}><UserPlus className="w-4 h-4 mr-2"/>Participation</Button>
-                <Button variant="ghost" onClick={() => setActiveFormTab('fields')} className={\`text-sm \${activeFormTab === 'fields' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}\`}><FileText className="w-4 h-4 mr-2"/>Form Fields</Button>
+                <Button variant="ghost" onClick={() => setActiveFormTab('basic')} className={`text-sm ${activeFormTab === 'basic' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}`}><Settings className="w-4 h-4 mr-2"/>Basic Info</Button>
+                <Button variant="ghost" onClick={() => setActiveFormTab('payment')} className={`text-sm ${activeFormTab === 'payment' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}`}><CreditCard className="w-4 h-4 mr-2"/>Payment</Button>
+                <Button variant="ghost" onClick={() => setActiveFormTab('participation')} className={`text-sm ${activeFormTab === 'participation' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}`}><UserPlus className="w-4 h-4 mr-2"/>Participation</Button>
+                <Button variant="ghost" onClick={() => setActiveFormTab('fields')} className={`text-sm ${activeFormTab === 'fields' ? 'bg-blue-900/40 text-blue-400' : 'text-gray-400'}`}><FileText className="w-4 h-4 mr-2"/>Form Fields</Button>
               </div>
 
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-2 space-y-6">
@@ -273,10 +273,10 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
                               </div>
                               <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-2">
-                                  <Switch checked={field.enabled} onCheckedChange={() => toggleField(field.id, 'enabled')} id={\`enable-\${field.id}\`}/> <Label htmlFor={\`enable-\${field.id}\`} className="w-12 text-xs text-gray-400">Enable</Label>
+                                  <Switch checked={field.enabled} onCheckedChange={() => toggleField(field.id, 'enabled')} id={`enable-${field.id}`}/> <Label htmlFor={`enable-${field.id}`} className="w-12 text-xs text-gray-400">Enable</Label>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <Switch checked={field.required} disabled={!field.enabled} onCheckedChange={() => toggleField(field.id, 'required')} id={\`req-\${field.id}\`}/> <Label htmlFor={\`req-\${field.id}\`} className="w-12 text-xs text-gray-400">Required</Label>
+                                  <Switch checked={field.required} disabled={!field.enabled} onCheckedChange={() => toggleField(field.id, 'required')} id={`req-${field.id}`}/> <Label htmlFor={`req-${field.id}`} className="w-12 text-xs text-gray-400">Required</Label>
                                 </div>
                               </div>
                             </div>
@@ -313,7 +313,7 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
                </p>
              </div>
              <div className="flex gap-2">
-               <Button variant="outline" size="sm" onClick={() => navigate(\`/admin/submissions/\${event.id}\`)} className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10">Submissions</Button>
+               <Button variant="outline" size="sm" onClick={() => navigate(`/admin/submissions/${event.id}`)} className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10">Submissions</Button>
                <Button onClick={() => handleEdit(event)} size="icon" className="bg-blue-500/20 text-blue-400"><Edit2 className="w-4 h-4"/></Button>
                <Button onClick={() => handleDelete(event.id)} size="icon" className="bg-red-500/20 text-red-400"><Trash2 className="w-4 h-4"/></Button>
              </div>
