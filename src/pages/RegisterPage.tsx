@@ -38,6 +38,8 @@ const RegisterPage = () => {
 
   const [membersData, setMembersData] = useState<any[]>([{}]);
   const [paymentScreenshot, setPaymentScreenshot] = useState<string>("");
+  const [transactionId, setTransactionId] = useState<string>("");
+  const [transactionIdError, setTransactionIdError] = useState<string>("");
   const [teamName, setTeamName] = useState("");
 
   useEffect(() => {
@@ -103,6 +105,12 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Require transaction ID for paid events
+    if (event.registration_type === "paid" && !transactionId.trim()) {
+      setTransactionIdError("Reference / Transaction ID is required for paid events.");
+      return;
+    }
+    setTransactionIdError("");
     setIsSubmitting(true);
     try {
       const primaryMember = membersData[0] || {};
@@ -114,13 +122,25 @@ const RegisterPage = () => {
         registration_type: event.registration_type,
         registration_category: regType,
         payment_proof_url: paymentScreenshot || null,
+        transaction_id: transactionId.trim() || null,
         team_members: membersData,
         dynamic_fields: primaryMember,
       });
       setSubmitted(true);
       toast({ title: "Registration Successful!", description: `You're registered for ${event.title}.` });
-    } catch (error) {
-      toast({ title: "Registration Failed", description: "Something went wrong. Please try again.", variant: "destructive" });
+    } catch (error: any) {
+      // Handle duplicate transaction ID specifically
+      const msg = error?.message || "";
+      if (msg.includes("DUPLICATE_TRANSACTION_ID") || error?.status === 409) {
+        setTransactionIdError("This Transaction ID has already been used. Please check your payment details and enter the correct unique ID.");
+        toast({
+          title: "Duplicate Transaction ID",
+          description: "This Reference / Transaction ID is already registered. Each payment must be unique.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Registration Failed", description: "Something went wrong. Please try again.", variant: "destructive" });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -532,6 +552,51 @@ const RegisterPage = () => {
                           <p className="text-xs text-gray-600 mt-1 font-mono break-all">{event.payment_link}</p>
                         </div>
                       )}
+                      {/* ── Transaction ID field ─────────────────────── */}
+                      <div className="mb-4">
+                        <Label className="text-sm text-gray-300 flex items-center gap-1.5">
+                          Reference / Transaction ID
+                          <span className="text-red-500">*</span>
+                          <span className="text-xs text-gray-600 font-normal ml-1">(must be unique)</span>
+                        </Label>
+                        <div className="relative mt-1.5">
+                          <Input
+                            type="text"
+                            value={transactionId}
+                            onChange={(e) => {
+                              setTransactionId(e.target.value);
+                              if (transactionIdError) setTransactionIdError("");
+                            }}
+                            placeholder="e.g. TXN123456789 or UTR number"
+                            required
+                            className={`bg-[#1a1a2e]/50 border text-white focus:ring-0 pr-10 ${
+                              transactionIdError
+                                ? "border-red-500/70 focus:border-red-500"
+                                : transactionId.trim()
+                                  ? "border-green-500/50 focus:border-green-500"
+                                  : "border-yellow-500/40 focus:border-yellow-400/50"
+                            }`}
+                          />
+                          {transactionId.trim() && !transactionIdError && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400 text-sm">✓</span>
+                          )}
+                          {transactionIdError && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-sm">✗</span>
+                          )}
+                        </div>
+                        {transactionIdError ? (
+                          <p className="text-red-400 text-xs mt-1.5 flex items-start gap-1.5">
+                            <span className="text-red-500 mt-0.5 flex-shrink-0">⚠</span>
+                            {transactionIdError}
+                          </p>
+                        ) : (
+                          <p className="text-gray-600 text-xs mt-1.5">
+                            Enter the UTR / Reference number from your payment confirmation. This must be unique per registration.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* ── Proof of Payment URL ─────────────────────── */}
                       <div>
                         <Label className="text-sm text-gray-300">Proof of Payment URL <span className="text-red-500">*</span></Label>
                         <Input

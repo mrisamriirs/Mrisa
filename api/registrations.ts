@@ -88,7 +88,33 @@ export default async function handler(
     const eventId = String(body.event_id || "").trim();
     if (!eventId) return sendJson(res, 400, { error: "Missing event_id" });
 
-    await collection.insertOne({ ...body, event_id: eventId, created_at: new Date().toISOString() });
+    // ── Unique Transaction ID check ─────────────────────────────────────
+    const transactionId = body.transaction_id ? String(body.transaction_id).trim() : null;
+    if (transactionId) {
+      // Normalise: lowercase, strip spaces so casing/spacing variants are caught
+      const normalised = transactionId.toLowerCase().replace(/\s+/g, "");
+      const existing = await collection.findOne(
+        { transaction_id_normalised: normalised },
+        { projection: { _id: 1 } }
+      );
+      if (existing) {
+        return sendJson(res, 409, {
+          error: "DUPLICATE_TRANSACTION_ID",
+          message: "This Reference / Transaction ID has already been used. Each payment must have a unique transaction ID.",
+        });
+      }
+    }
+
+    await collection.insertOne({
+      ...body,
+      event_id: eventId,
+      transaction_id: transactionId,
+      // Store normalised form for duplicate lookups
+      transaction_id_normalised: transactionId
+        ? transactionId.toLowerCase().replace(/\s+/g, "")
+        : null,
+      created_at: new Date().toISOString(),
+    });
     return sendJson(res, 201, { ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Registration request failed";
