@@ -18,12 +18,21 @@ interface RateLimitBucket {
 
 const rateLimitStore = new Map<string, RateLimitBucket>();
 
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, bucket] of rateLimitStore) {
-    if (now > bucket.resetAt) rateLimitStore.delete(key);
+try {
+  const timer = setInterval(() => {
+    const now = Date.now();
+    for (const [key, bucket] of rateLimitStore) {
+      if (now > bucket.resetAt) rateLimitStore.delete(key);
+    }
+  }, 5 * 60 * 1000);
+  // unref() only exists on Node.js Timeout objects, not on Vercel serverless timers
+  if (timer && typeof (timer as any).unref === "function") {
+    (timer as any).unref();
   }
-}, 5 * 60 * 1000).unref?.();
+} catch {
+  // Timer setup is non-critical; ignore errors in serverless environments
+}
+
 
 const getClientIp = (req: IncomingMessage): string => {
   const forwarded = req.headers["x-forwarded-for"];
