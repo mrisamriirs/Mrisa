@@ -319,18 +319,16 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
                     disabled={isLoading}
                     className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white"
                   />
-                  {formData.image_url && (
-                    <div className="mt-3 rounded-lg overflow-hidden border border-blue-900/40">
-                      <img
-                        src={formData.image_url}
-                        alt="Event preview"
-                        className="w-full h-32 object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    </div>
-                  )}
+                  <div className="mt-3 rounded-lg overflow-hidden border border-blue-900/40">
+                    <img
+                      src={formData.image_url || "/default_image/meisa_default.jpeg"}
+                      alt="Event preview"
+                      className="w-full h-32 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/default_image/meisa_default.jpeg";
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Date and Time */}
@@ -486,18 +484,16 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
                 className="bg-[#121224]/70 backdrop-blur-md rounded-2xl overflow-hidden border border-blue-900/40 hover:border-blue-900/60 transition-all duration-300 group"
               >
                 {/* Event Image */}
-                {event.image_url && (
-                  <div className="relative h-24 sm:h-32 md:h-40 overflow-hidden bg-[#0a0a14]">
-                    <img
-                      src={event.image_url}
-                      alt={event.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  </div>
-                )}
+                <div className="relative h-24 sm:h-32 md:h-40 overflow-hidden bg-[#0a0a14]">
+                  <img
+                    src={event.image_url || "/default_image/meisa_default.jpeg"}
+                    alt={event.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/default_image/meisa_default.jpeg";
+                    }}
+                  />
+                </div>
 
                 <div className="p-4 sm:p-5 md:p-6">
                   <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">

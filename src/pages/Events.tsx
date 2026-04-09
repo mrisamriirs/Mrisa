@@ -125,18 +125,16 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
         className={`relative bg-[#121224]/70 backdrop-blur-md rounded-lg sm:rounded-xl border ${status.color} transition-shadow duration-300 hover:shadow-2xl hover:shadow-green-500/10 overflow-hidden`}
       >
         {/* Event Image */}
-        {event.image_url && (
-          <div className="relative h-24 sm:h-32 overflow-hidden bg-[#0a0a14]">
-            <img
-              src={event.image_url}
-              alt={event.title}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-          </div>
-        )}
+        <div className="relative h-24 sm:h-32 overflow-hidden bg-[#0a0a14]">
+          <img
+            src={event.image_url || "/default_image/meisa_default.jpeg"}
+            alt={event.title}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/default_image/meisa_default.jpeg";
+            }}
+          />
+        </div>
 
         <div style={{ transform: "translateZ(20px)" }} className="p-4 sm:p-6">
           <div className="flex justify-between items-start gap-2 mb-3 sm:mb-4">
@@ -159,14 +157,12 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
               <a href={event.registration_link} target="_blank" rel="noopener noreferrer" className="block">
                 <Button className="w-full bg-green-500 text-black hover:bg-green-400 h-9 sm:h-10 text-xs sm:text-sm">Register Now</Button>
               </a>
-            ) : event.status === "upcoming" && !event.registration_link ? (
-              <Button disabled className="w-full bg-gray-500 text-gray-300 cursor-not-allowed h-9 sm:h-10 text-xs sm:text-sm">No Registration Link</Button>
             ) : event.status === "past" ? (
               <Link to="/winners" className="block">
                 <Button className="w-full bg-blue-500 text-white hover:bg-blue-400 border-blue-900/40 h-9 sm:h-10 text-xs sm:text-sm">View Results</Button>
               </Link>
-            ) : event.status === "active" ? (
-              <a href={event.registration_link || "#"} target="_blank" rel="noopener noreferrer" className="block">
+            ) : event.status === "active" && event.registration_link ? (
+              <a href={event.registration_link} target="_blank" rel="noopener noreferrer" className="block">
                 <Button className="w-full bg-blue-500 text-white hover:bg-blue-400 h-9 sm:h-10 text-xs sm:text-sm">Join Now</Button>
               </a>
             ) : null}
