@@ -96,18 +96,26 @@ const EventCard = ({ event }: { event: CTFEvent }) => {
             <span className="line-clamp-1">{event.location} • {event.attendees} attendees</span>
           </div>
           <div style={{ transform: "translateZ(30px)" }} className="space-y-2">
-            {event.status === "upcoming" && event.registration_link ? (
-              <a href={event.registration_link} target="_blank" rel="noopener noreferrer" className="block">
-                <Button className="w-full bg-green-500 text-black hover:bg-green-400 h-9 sm:h-10 text-xs sm:text-sm">Register Now</Button>
-              </a>
+            {event.status === "upcoming" ? (
+              event.registration_link ? (
+                <a href={event.registration_link} target="_blank" rel="noopener noreferrer" className="block">
+                  <Button className="w-full bg-green-500 text-black hover:bg-green-400 h-9 sm:h-10 text-xs sm:text-sm">Register Now</Button>
+                </a>
+              ) : (
+                <Button onClick={() => setIsModalOpen(true)} className="w-full bg-green-500 text-black hover:bg-green-400 h-9 sm:h-10 text-xs sm:text-sm">Register Now</Button>
+              )
             ) : event.status === "past" ? (
               <Link to="/winners" className="block">
                 <Button className="w-full bg-blue-500 text-white hover:bg-blue-400 border-blue-900/40 h-9 sm:h-10 text-xs sm:text-sm">View Results</Button>
               </Link>
-            ) : event.status === "active" && event.registration_link ? (
-              <a href={event.registration_link} target="_blank" rel="noopener noreferrer" className="block">
-                <Button className="w-full bg-blue-500 text-white hover:bg-blue-400 h-9 sm:h-10 text-xs sm:text-sm">Join Now</Button>
-              </a>
+            ) : event.status === "active" ? (
+              event.registration_link ? (
+                <a href={event.registration_link} target="_blank" rel="noopener noreferrer" className="block">
+                  <Button className="w-full bg-blue-500 text-white hover:bg-blue-400 h-9 sm:h-10 text-xs sm:text-sm">Join Now</Button>
+                </a>
+              ) : (
+                <Button onClick={() => setIsModalOpen(true)} className="w-full bg-blue-500 text-white hover:bg-blue-400 h-9 sm:h-10 text-xs sm:text-sm">Join Now</Button>
+              )
             ) : null}
           </div>
         </div>

@@ -313,7 +313,7 @@ export const EventsManagement = ({ showForm: externalShowForm, setShowForm: exte
                </p>
              </div>
              <div className="flex gap-2">
-               <Button variant="outline" size="sm" onClick={() => navigate(`/admin/submissions/${event.id}`)} className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10">Submissions</Button>
+               <Button variant="outline" size="sm" onClick={() => window.open(`/admin/submissions/${event.id}`, '_blank')} className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"><ExternalLink className="w-4 h-4 mr-1"/> Submissions</Button>
                <Button onClick={() => handleEdit(event)} size="icon" className="bg-blue-500/20 text-blue-400"><Edit2 className="w-4 h-4"/></Button>
                <Button onClick={() => handleDelete(event.id)} size="icon" className="bg-red-500/20 text-red-400"><Trash2 className="w-4 h-4"/></Button>
              </div>
