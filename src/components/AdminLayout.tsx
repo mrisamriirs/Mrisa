@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LogOut, LayoutDashboard, Calendar, Trophy, ChevronLeft, Menu, X, Home
+  LogOut, LayoutDashboard, Calendar, Trophy, ChevronLeft, Menu, X, Home, Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, color: "text-emerald-400" },
   { href: "/admin/events", label: "Events", icon: Calendar, color: "text-blue-400" },
   { href: "/admin/winners", label: "Winners", icon: Trophy, color: "text-yellow-400" },
+  { href: "/admin/registrations", label: "Registrations", icon: Users, color: "text-purple-400" },
 ];
 
 export const AdminLayout = ({ children, title, subtitle, headerActions }: AdminLayoutProps) => {

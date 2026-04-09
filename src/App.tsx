@@ -16,6 +16,7 @@ import Alumni from "./pages/Alumni";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import RegistrationPage from "./pages/RegistrationPage";
 import NotFound from "./pages/NotFound";
 import { RegistrationSubmissions } from "@/components/RegistrationSubmissions";
 
@@ -24,7 +25,7 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const location = useLocation();
   // Hide navbar on login, dashboard and admin pages
-  const hideNavbar = ["/login", "/dashboard", "/admin/events", "/admin/winners"].includes(location.pathname) || location.pathname.startsWith("/admin/submissions");
+  const hideNavbar = ["/login", "/dashboard", "/admin/events", "/admin/winners", "/admin/registrations"].includes(location.pathname) || location.pathname.startsWith("/admin/submissions");
 
   return (
     <div className="min-h-screen bg-background relative matrix-bg">
@@ -67,6 +68,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <RegistrationSubmissions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/registrations"
+          element={
+            <ProtectedRoute>
+              <RegistrationPage />
             </ProtectedRoute>
           }
         />
