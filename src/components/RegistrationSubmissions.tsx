@@ -284,9 +284,83 @@ export const RegistrationSubmissions = () => {
                         <Switch checked={formData.registration_type === 'paid'} onCheckedChange={(c) => setFormData({...formData, registration_type: c ? 'paid' : 'unpaid'})} />
                       </div>
                       {formData.registration_type === 'paid' && (
-                        <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto'}} className="space-y-4">
-                          <div><Label className="text-gray-300">Payment QR Code URL</Label><Input placeholder="https://..." value={formData.payment_qr_url} onChange={e => setFormData({...formData, payment_qr_url: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
-                          <div><Label className="text-gray-300">Payment Instructions</Label><Textarea placeholder="UPI ID: mr@ybl etc." value={formData.payment_instructions} onChange={e => setFormData({...formData, payment_instructions: e.target.value})} className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white" /></div>
+                        <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto'}} className="space-y-5">
+                          {/* QR Code Section */}
+                          <div className="border border-blue-900/40 rounded-xl bg-[#1a1a2e]/30 p-4 space-y-3">
+                            <Label className="text-gray-200 font-semibold text-sm block">Payment QR Code</Label>
+                            {/* Preview */}
+                            {formData.payment_qr_url && (
+                              <div className="flex items-start gap-4">
+                                <div className="bg-white p-2 rounded-lg inline-block">
+                                  <img src={formData.payment_qr_url} alt="QR Preview" className="w-36 h-36 object-contain rounded" />
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                  <p className="text-green-400 text-xs flex items-center gap-1">
+                                    <span className="w-2 h-2 bg-green-400 rounded-full inline-block" /> QR Code active
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => setFormData({...formData, payment_qr_url: ''})}
+                                    className="text-red-400 text-xs hover:text-red-300 underline"
+                                  >
+                                    Remove QR Code
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            {/* Upload */}
+                            <div>
+                              <Label className="text-gray-400 text-xs mb-1 block">Upload QR Image (PNG/JPG)</Label>
+                              <label className="flex items-center gap-3 cursor-pointer border border-dashed border-blue-900/60 hover:border-blue-500/60 rounded-xl p-4 bg-[#0f0f1e]/50 transition-colors group">
+                                <div className="w-10 h-10 rounded-xl bg-blue-900/20 group-hover:bg-blue-900/40 flex items-center justify-center flex-shrink-0 transition-colors">
+                                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
+                                <div>
+                                  <p className="text-gray-300 text-sm">Click to upload QR code image</p>
+                                  <p className="text-gray-600 text-xs">PNG, JPG up to 2MB</p>
+                                </div>
+                                <input
+                                  type="file"
+                                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    if (file.size > 2 * 1024 * 1024) {
+                                      alert('File too large. Please use an image under 2MB.');
+                                      return;
+                                    }
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => {
+                                      setFormData((prev: any) => ({...prev, payment_qr_url: ev.target?.result as string}));
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            {/* Or paste URL */}
+                            <div>
+                              <Label className="text-gray-400 text-xs mb-1 block">Or paste QR image URL</Label>
+                              <Input
+                                placeholder="https://..."
+                                value={formData.payment_qr_url?.startsWith('data:') ? '' : (formData.payment_qr_url || '')}
+                                onChange={e => setFormData({...formData, payment_qr_url: e.target.value})}
+                                className="bg-[#1a1a2e]/50 border-blue-900/40 text-white text-sm"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Instructions */}
+                          <div>
+                            <Label className="text-gray-300">Payment Instructions</Label>
+                            <Textarea
+                              placeholder="UPI ID: mr@ybl&#10;Amount: ₹499&#10;&#10;After paying, upload the screenshot below."
+                              value={formData.payment_instructions}
+                              onChange={e => setFormData({...formData, payment_instructions: e.target.value})}
+                              className="mt-2 bg-[#1a1a2e]/50 border-blue-900/40 text-white min-h-[100px]"
+                            />
+                          </div>
                         </motion.div>
                       )}
                     </div>

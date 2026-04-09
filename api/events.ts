@@ -14,6 +14,15 @@ interface EventDocument {
   attendees: number;
   image_url: string | null;
   registration_link: string | null;
+  // Registration config
+  registration_type?: "paid" | "unpaid";
+  payment_qr_url?: string | null;
+  payment_instructions?: string | null;
+  participation_type?: "solo" | "team";
+  team_min_members?: number | null;
+  team_max_members?: number | null;
+  team_enforce_details?: boolean;
+  form_fields?: any[];
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +56,15 @@ const toEvent = (event: WithId<EventDocument>) => ({
   attendees: event.attendees ?? 0,
   image_url: event.image_url ?? null,
   registration_link: event.registration_link ?? null,
+  // Registration config fields – pass through as-is
+  registration_type: event.registration_type ?? "unpaid",
+  payment_qr_url: event.payment_qr_url ?? null,
+  payment_instructions: event.payment_instructions ?? null,
+  participation_type: event.participation_type ?? "solo",
+  team_min_members: event.team_min_members ?? null,
+  team_max_members: event.team_max_members ?? null,
+  team_enforce_details: event.team_enforce_details ?? false,
+  form_fields: event.form_fields ?? [],
   created_at: event.created_at,
   updated_at: event.updated_at,
 });
@@ -75,7 +93,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
       const body = (await readBody(req)) as Record<string, unknown>;
       const now = new Date().toISOString();
 
-      const payload = {
+      const payload: EventDocument = {
         title: String(body.title || "").trim(),
         description: String(body.description || "").trim(),
         date: String(body.date || "").trim(),
@@ -85,6 +103,15 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
         attendees: Number.isFinite(Number(body.attendees)) ? Number(body.attendees) : 0,
         image_url: body.image_url ? String(body.image_url).trim() : null,
         registration_link: body.registration_link ? String(body.registration_link).trim() : null,
+        // Registration config
+        registration_type: body.registration_type === "paid" ? "paid" : "unpaid",
+        payment_qr_url: body.payment_qr_url ? String(body.payment_qr_url) : null,
+        payment_instructions: body.payment_instructions ? String(body.payment_instructions) : null,
+        participation_type: body.participation_type === "team" ? "team" : "solo",
+        team_min_members: Number.isFinite(Number(body.team_min_members)) ? Number(body.team_min_members) : null,
+        team_max_members: Number.isFinite(Number(body.team_max_members)) ? Number(body.team_max_members) : null,
+        team_enforce_details: Boolean(body.team_enforce_details),
+        form_fields: Array.isArray(body.form_fields) ? body.form_fields : [],
         created_at: now,
         updated_at: now,
       };
@@ -105,7 +132,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
         return sendJson(res, 400, { error: "Missing event id" });
       }
 
-      const update = {
+      const update: Partial<EventDocument> & { updated_at: string } = {
         title: String(body.title || "").trim(),
         description: String(body.description || "").trim(),
         date: String(body.date || "").trim(),
@@ -115,6 +142,15 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
         attendees: Number.isFinite(Number(body.attendees)) ? Number(body.attendees) : 0,
         image_url: body.image_url ? String(body.image_url).trim() : null,
         registration_link: body.registration_link ? String(body.registration_link).trim() : null,
+        // Registration config – always overwrite so admin config saves correctly
+        registration_type: body.registration_type === "paid" ? "paid" : "unpaid",
+        payment_qr_url: body.payment_qr_url ? String(body.payment_qr_url) : null,
+        payment_instructions: body.payment_instructions ? String(body.payment_instructions) : null,
+        participation_type: body.participation_type === "team" ? "team" : "solo",
+        team_min_members: Number.isFinite(Number(body.team_min_members)) ? Number(body.team_min_members) : null,
+        team_max_members: Number.isFinite(Number(body.team_max_members)) ? Number(body.team_max_members) : null,
+        team_enforce_details: Boolean(body.team_enforce_details),
+        form_fields: Array.isArray(body.form_fields) ? body.form_fields : [],
         updated_at: new Date().toISOString(),
       };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, Users, CreditCard, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Users, CreditCard, CheckCircle, Building2, GraduationCap, Calendar, Clock, MapPin, ArrowRight, ImageIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,12 @@ import { submitRegistration, fetchEvents } from "@/lib/api";
 import { Scene3D } from "@/components/Scene3D";
 
 const DEFAULT_FORM_FIELDS = [
-  { id: "name", label: "Name", type: "text", enabled: true, required: true },
-  { id: "email", label: "Email", type: "email", enabled: true, required: true },
+  { id: "name", label: "Name", type: "text", enabled: true, required: true, category: "Common" },
+  { id: "email", label: "Email", type: "email", enabled: true, required: true, category: "Common" },
 ];
+
+type RegType = "organization" | "university" | null;
+type Step = "details" | "form";
 
 const RegisterPage = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -24,6 +27,9 @@ const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const [step, setStep] = useState<Step>("details");
+  const [regType, setRegType] = useState<RegType>(null);
 
   const isTeam = event?.participation_type === "team";
   const numTeamMembers = Number(event?.team_min_members) || 1;
@@ -54,7 +60,20 @@ const RegisterPage = () => {
   }, [eventId, toast]);
 
   const formFields = event?.form_fields || DEFAULT_FORM_FIELDS;
-  const activeFields = formFields.filter((f: any) => f.enabled);
+
+  // Filter fields: Common always shown + selected category (Organization or University)
+  const activeFields = formFields.filter((f: any) => {
+    if (!f.enabled) return false;
+    if (f.category === "Common") return true;
+    if (regType === "organization" && f.category === "Organization") return true;
+    if (regType === "university" && f.category === "University") return true;
+    return false;
+  });
+
+  // Check if there are any org or uni fields enabled at all
+  const hasOrgFields = formFields.some((f: any) => f.enabled && f.category === "Organization");
+  const hasUniFields = formFields.some((f: any) => f.enabled && f.category === "University");
+  const needsTypeSelection = hasOrgFields || hasUniFields;
 
   const handleMemberChange = (index: number, fieldId: string, value: string) => {
     const updated = [...membersData];
@@ -74,6 +93,11 @@ const RegisterPage = () => {
     }
   };
 
+  const handleProceed = (type: RegType) => {
+    setRegType(type);
+    setStep("form");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -85,6 +109,7 @@ const RegisterPage = () => {
         email: primaryMember.email || "unknown@domain.com",
         team_name: isTeam ? teamName : null,
         registration_type: event.registration_type,
+        registration_category: regType,
         payment_proof_url: paymentScreenshot || null,
         team_members: membersData,
         dynamic_fields: primaryMember,
@@ -100,7 +125,6 @@ const RegisterPage = () => {
 
   const renderField = (field: any, index: number) => {
     const value = membersData[index]?.[field.id] || "";
-    // All members up to min_members are ALWAYS required to fill all required fields
     const isRequired = field.required && (index < numTeamMembers || event?.team_enforce_details);
 
     return (
@@ -128,6 +152,7 @@ const RegisterPage = () => {
     );
   };
 
+  // --- LOADING ---
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
@@ -139,6 +164,7 @@ const RegisterPage = () => {
     );
   }
 
+  // --- NOT FOUND ---
   if (!event) {
     return (
       <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
@@ -152,6 +178,7 @@ const RegisterPage = () => {
     );
   }
 
+  // --- SUCCESS ---
   if (submitted) {
     return (
       <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center px-4">
@@ -174,141 +201,253 @@ const RegisterPage = () => {
       <div className="fixed inset-0 z-0"><Scene3D /></div>
       <div className="relative z-10 min-h-screen py-8 sm:py-12">
         <div className="container mx-auto px-4 max-w-3xl">
-          
-          {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <Button variant="ghost" onClick={() => navigate("/events")} className="text-gray-400 hover:text-white mb-4 -ml-2">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Events
+
+          {/* Back button */}
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+            <Button variant="ghost" onClick={() => step === "form" ? setStep("details") : navigate("/events")} className="text-gray-400 hover:text-white mb-4 -ml-2">
+              <ArrowLeft className="w-4 h-4 mr-2" /> {step === "form" ? "Back to Event Details" : "Back to Events"}
             </Button>
-            <div className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-blue-900/40 p-6 sm:p-8">
-              {event.image_url && (
-                <div className="h-40 sm:h-52 rounded-xl overflow-hidden mb-6 -mx-2 -mt-2">
-                  <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/default_image/meisa_default.jpeg"; }} />
-                </div>
-              )}
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{event.title}</h1>
-              <p className="text-gray-400 text-sm mb-4">{event.description}</p>
-              <div className="flex flex-wrap gap-3 text-xs text-gray-400">
-                <span className="bg-[#1a1a2e]/80 px-3 py-1.5 rounded-full border border-blue-900/30">{event.date} • {event.time}</span>
-                <span className="bg-[#1a1a2e]/80 px-3 py-1.5 rounded-full border border-blue-900/30">{event.location}</span>
-                {isTeam && (
-                  <span className="bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-500/30 text-blue-400 flex items-center gap-1">
-                    <Users className="w-3 h-3" /> Team ({numTeamMembers}–{maxTeamMembers} members)
-                  </span>
-                )}
-                {event.registration_type === "paid" && (
-                  <span className="bg-yellow-900/20 px-3 py-1.5 rounded-full border border-yellow-500/30 text-yellow-400 flex items-center gap-1">
-                    <CreditCard className="w-3 h-3" /> Paid Event
-                  </span>
-                )}
-              </div>
-            </div>
           </motion.div>
 
-          {/* Registration Form */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <AnimatePresence mode="wait">
 
-              {/* Team Name */}
-              {isTeam && (
-                <div className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-blue-900/40 p-6">
-                  <h3 className="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
-                    <Users className="w-5 h-5" /> Team Information
-                  </h3>
-                  <div>
-                    <Label className="text-sm text-gray-300">Team Name <span className="text-red-500">*</span></Label>
-                    <Input value={teamName} onChange={(e) => setTeamName(e.target.value)} required className="mt-1.5 bg-[#1a1a2e]/50 border-blue-900/40 text-white focus:border-green-500/50" placeholder="Enter your team name" />
+            {/* ========== STEP 1: EVENT DETAILS + TYPE SELECTOR ========== */}
+            {step === "details" && (
+              <motion.div key="details" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+
+                {/* Event Details Card */}
+                <div className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-blue-900/40 overflow-hidden">
+                  {/* Banner */}
+                  <div className="h-48 sm:h-64 overflow-hidden bg-[#0a0a14] relative">
+                    <img
+                      src={event.image_url || "/default_image/meisa_default.jpeg"}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/default_image/meisa_default.jpeg"; }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#121224] via-transparent to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+                      <span className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border mb-3 inline-block ${event.status === 'active' ? 'bg-green-500/10 border-green-500/30 text-green-400' : event.status === 'upcoming' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-gray-500/10 border-gray-500/30 text-gray-400'}`}>
+                        {event.status}
+                      </span>
+                      <h1 className="text-2xl sm:text-4xl font-bold text-white leading-tight">{event.title}</h1>
+                    </div>
                   </div>
-                  {isTeam && (
-                    <p className="text-xs text-gray-500 mt-3">
-                      Minimum {numTeamMembers} member{numTeamMembers > 1 ? "s" : ""} required. All members must complete the registration form. You can add up to {maxTeamMembers} members.
-                    </p>
-                  )}
-                </div>
-              )}
 
-              {/* Member Forms */}
-              {membersData.map((_, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 * index }}
-                  className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-blue-900/40 p-6"
-                >
-                  <div className="flex justify-between items-center mb-5 pb-3 border-b border-blue-900/30">
-                    <h3 className="text-lg font-bold text-white">
-                      {isTeam ? (
-                        <>
-                          <span className="text-blue-400">Member {index + 1}</span>
-                          {index === 0 && <span className="text-gray-500 text-sm ml-2">(Primary Contact)</span>}
-                          {index < numTeamMembers && <span className="text-red-400 text-xs ml-2">(Required)</span>}
-                        </>
-                      ) : (
-                        "Your Details"
+                  {/* Info */}
+                  <div className="p-6 sm:p-8">
+                    <p className="text-gray-400 text-sm sm:text-base mb-6 leading-relaxed">{event.description}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
+                      <div className="flex items-center gap-3 bg-[#1a1a2e]/50 px-4 py-3 rounded-xl border border-blue-900/20">
+                        <Calendar className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <div>
+                          <p className="text-[10px] uppercase text-gray-500 tracking-wider">Date</p>
+                          <p className="text-sm text-white">{event.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 bg-[#1a1a2e]/50 px-4 py-3 rounded-xl border border-blue-900/20">
+                        <Clock className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                        <div>
+                          <p className="text-[10px] uppercase text-gray-500 tracking-wider">Time</p>
+                          <p className="text-sm text-white">{event.time}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 bg-[#1a1a2e]/50 px-4 py-3 rounded-xl border border-blue-900/20">
+                        <MapPin className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                        <div>
+                          <p className="text-[10px] uppercase text-gray-500 tracking-wider">Location</p>
+                          <p className="text-sm text-white">{event.location}</p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {isTeam && (
+                        <span className="bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-500/30 text-blue-400 flex items-center gap-1.5 text-xs">
+                          <Users className="w-3 h-3" /> Team ({numTeamMembers}–{maxTeamMembers} members)
+                        </span>
                       )}
-                    </h3>
-                    {isTeam && index >= numTeamMembers && (
-                      <Button type="button" variant="destructive" size="sm" onClick={() => removeMember(index)} className="h-8 text-xs">
-                        Remove
-                      </Button>
-                    )}
+                      {event.registration_type === "paid" && (
+                        <span className="bg-yellow-900/20 px-3 py-1.5 rounded-full border border-yellow-500/30 text-yellow-400 flex items-center gap-1.5 text-xs">
+                          <CreditCard className="w-3 h-3" /> Paid Event
+                        </span>
+                      )}
+                      <span className="bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 text-green-400 text-xs">
+                        {event.attendees || 0} Registered
+                      </span>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {activeFields.map((f: any) => renderField(f, index))}
+                </div>
+
+                {/* Registration Type Selector */}
+                {needsTypeSelection ? (
+                  <div className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-blue-900/40 p-6 sm:p-8">
+                    <h2 className="text-xl font-bold text-white mb-2">Choose Your Registration Type</h2>
+                    <p className="text-gray-500 text-sm mb-6">Select the category that best describes you to proceed with registration.</p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {hasOrgFields && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleProceed("organization")}
+                          className="group relative bg-[#1a1a2e]/50 border border-blue-900/40 hover:border-emerald-500/50 rounded-2xl p-6 text-left transition-all hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
+                            <Building2 className="w-6 h-6 text-emerald-400" />
+                          </div>
+                          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-emerald-400 transition-colors">Organization</h3>
+                          <p className="text-gray-500 text-xs leading-relaxed">For working professionals and organization representatives.</p>
+                          <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-emerald-400 absolute top-6 right-6 transition-colors" />
+                        </motion.button>
+                      )}
+
+                      {hasUniFields && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleProceed("university")}
+                          className="group relative bg-[#1a1a2e]/50 border border-blue-900/40 hover:border-violet-500/50 rounded-2xl p-6 text-left transition-all hover:shadow-[0_0_30px_rgba(139,92,246,0.1)]"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4 group-hover:bg-violet-500/20 transition-colors">
+                            <GraduationCap className="w-6 h-6 text-violet-400" />
+                          </div>
+                          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-violet-400 transition-colors">University</h3>
+                          <p className="text-gray-500 text-xs leading-relaxed">For students and university representatives.</p>
+                          <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-violet-400 absolute top-6 right-6 transition-colors" />
+                        </motion.button>
+                      )}
+                    </div>
                   </div>
-                </motion.div>
-              ))}
+                ) : (
+                  /* If no org/uni fields are configured, skip type selection */
+                  <div className="flex justify-center">
+                    <Button onClick={() => handleProceed(null)} className="bg-green-500 text-black hover:bg-green-400 h-12 px-10 text-base font-bold">
+                      Proceed to Registration <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            )}
 
-              {/* Add Member Button */}
-              {isTeam && membersData.length < maxTeamMembers && (
-                <Button type="button" onClick={addMember} variant="outline" className="w-full border-blue-900/40 border-dashed text-blue-400 hover:bg-blue-900/20 h-12">
-                  + Add Team Member ({membersData.length}/{maxTeamMembers})
-                </Button>
-              )}
+            {/* ========== STEP 2: REGISTRATION FORM ========== */}
+            {step === "form" && (
+              <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
 
-              {/* Payment Section */}
-              {event.registration_type === "paid" && (
-                <div className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-yellow-500/30 p-6">
-                  <h3 className="text-lg font-bold text-yellow-500 mb-4 flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" /> Payment Details
-                  </h3>
-                  {event.payment_instructions && (
-                    <p className="text-sm text-gray-300 mb-4 whitespace-pre-wrap leading-relaxed bg-yellow-900/10 p-4 rounded-xl border border-yellow-500/10">
-                      {event.payment_instructions}
-                    </p>
-                  )}
-                  {event.payment_qr_url && (
-                    <div className="mb-5 bg-white p-3 rounded-xl inline-block">
-                      <img src={event.payment_qr_url} alt="Payment QR" className="max-w-[220px] h-auto rounded" />
+                {/* Selected type badge */}
+                {regType && (
+                  <div className="mb-6 flex items-center gap-3">
+                    <span className="text-gray-500 text-sm">Registering as:</span>
+                    <span className={`px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 ${regType === 'organization' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-violet-500/10 border border-violet-500/30 text-violet-400'}`}>
+                      {regType === "organization" ? <Building2 className="w-4 h-4" /> : <GraduationCap className="w-4 h-4" />}
+                      {regType === "organization" ? "Organization" : "University"}
+                    </span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+
+                  {/* Team Name */}
+                  {isTeam && (
+                    <div className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-blue-900/40 p-6">
+                      <h3 className="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
+                        <Users className="w-5 h-5" /> Team Information
+                      </h3>
+                      <div>
+                        <Label className="text-sm text-gray-300">Team Name <span className="text-red-500">*</span></Label>
+                        <Input value={teamName} onChange={(e) => setTeamName(e.target.value)} required className="mt-1.5 bg-[#1a1a2e]/50 border-blue-900/40 text-white focus:border-green-500/50" placeholder="Enter your team name" />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-3">
+                        Minimum {numTeamMembers} member{numTeamMembers > 1 ? "s" : ""} required. All members must complete the registration form. You can add up to {maxTeamMembers} members.
+                      </p>
                     </div>
                   )}
-                  <div>
-                    <Label className="text-sm text-gray-300">Proof of Payment URL <span className="text-red-500">*</span></Label>
-                    <Input
-                      type="url"
-                      value={paymentScreenshot}
-                      onChange={(e) => setPaymentScreenshot(e.target.value)}
-                      placeholder="Link to screenshot (Drive, Imgur, etc.)"
-                      required
-                      className="mt-1.5 bg-[#1a1a2e]/50 border-yellow-500/40 text-white focus:border-yellow-400/50"
-                    />
-                    <p className="text-xs text-gray-500 mt-2">Upload your payment screenshot to a cloud service and paste the public link here.</p>
-                  </div>
-                </div>
-              )}
 
-              {/* Submit */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2 pb-8">
-                <Button type="button" variant="ghost" onClick={() => navigate("/events")} className="text-gray-400 hover:text-white sm:order-1">
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting} className="flex-1 bg-green-500 text-black hover:bg-green-400 h-12 text-base font-bold sm:order-2">
-                  {isSubmitting ? "Submitting..." : "Complete Registration"}
-                </Button>
-              </div>
-            </form>
-          </motion.div>
+                  {/* Member Forms */}
+                  {membersData.map((_, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 * index }}
+                      className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-blue-900/40 p-6"
+                    >
+                      <div className="flex justify-between items-center mb-5 pb-3 border-b border-blue-900/30">
+                        <h3 className="text-lg font-bold text-white">
+                          {isTeam ? (
+                            <>
+                              <span className="text-blue-400">Member {index + 1}</span>
+                              {index === 0 && <span className="text-gray-500 text-sm ml-2">(Primary Contact)</span>}
+                              {index < numTeamMembers && <span className="text-red-400 text-xs ml-2">(Required)</span>}
+                            </>
+                          ) : (
+                            "Your Details"
+                          )}
+                        </h3>
+                        {isTeam && index >= numTeamMembers && (
+                          <Button type="button" variant="destructive" size="sm" onClick={() => removeMember(index)} className="h-8 text-xs">
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {activeFields.map((f: any) => renderField(f, index))}
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  {/* Add Member Button */}
+                  {isTeam && membersData.length < maxTeamMembers && (
+                    <Button type="button" onClick={addMember} variant="outline" className="w-full border-blue-900/40 border-dashed text-blue-400 hover:bg-blue-900/20 h-12">
+                      + Add Team Member ({membersData.length}/{maxTeamMembers})
+                    </Button>
+                  )}
+
+                  {/* Payment Section */}
+                  {event.registration_type === "paid" && (
+                    <div className="bg-[#121224]/80 backdrop-blur-md rounded-2xl border border-yellow-500/30 p-6">
+                      <h3 className="text-lg font-bold text-yellow-500 mb-4 flex items-center gap-2">
+                        <CreditCard className="w-5 h-5" /> Payment Details
+                      </h3>
+                      {event.payment_instructions && (
+                        <p className="text-sm text-gray-300 mb-4 whitespace-pre-wrap leading-relaxed bg-yellow-900/10 p-4 rounded-xl border border-yellow-500/10">
+                          {event.payment_instructions}
+                        </p>
+                      )}
+                      {event.payment_qr_url && (
+                        <div className="mb-5 bg-white p-3 rounded-xl inline-block">
+                          <img src={event.payment_qr_url} alt="Payment QR" className="max-w-[220px] h-auto rounded" />
+                        </div>
+                      )}
+                      <div>
+                        <Label className="text-sm text-gray-300">Proof of Payment URL <span className="text-red-500">*</span></Label>
+                        <Input
+                          type="url"
+                          value={paymentScreenshot}
+                          onChange={(e) => setPaymentScreenshot(e.target.value)}
+                          placeholder="Link to screenshot (Drive, Imgur, etc.)"
+                          required
+                          className="mt-1.5 bg-[#1a1a2e]/50 border-yellow-500/40 text-white focus:border-yellow-400/50"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">Upload your payment screenshot to a cloud service and paste the public link here.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Submit */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2 pb-8">
+                    <Button type="button" variant="ghost" onClick={() => setStep("details")} className="text-gray-400 hover:text-white sm:order-1">
+                      Back
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting} className="flex-1 bg-green-500 text-black hover:bg-green-400 h-12 text-base font-bold sm:order-2">
+                      {isSubmitting ? "Submitting..." : "Complete Registration"}
+                    </Button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
         </div>
       </div>
     </div>
