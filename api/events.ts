@@ -17,6 +17,7 @@ interface EventDocument {
   // Registration config
   registration_type?: "paid" | "unpaid";
   payment_qr_url?: string | null;
+  payment_link?: string | null;
   payment_instructions?: string | null;
   participation_type?: "solo" | "team";
   team_min_members?: number | null;
@@ -59,6 +60,7 @@ const toEvent = (event: WithId<EventDocument>) => ({
   // Registration config fields – pass through as-is
   registration_type: event.registration_type ?? "unpaid",
   payment_qr_url: event.payment_qr_url ?? null,
+  payment_link: event.payment_link ?? null,
   payment_instructions: event.payment_instructions ?? null,
   participation_type: event.participation_type ?? "solo",
   team_min_members: event.team_min_members ?? null,
@@ -106,6 +108,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
         // Registration config
         registration_type: body.registration_type === "paid" ? "paid" : "unpaid",
         payment_qr_url: body.payment_qr_url ? String(body.payment_qr_url) : null,
+        payment_link: body.payment_link ? String(body.payment_link) : null,
         payment_instructions: body.payment_instructions ? String(body.payment_instructions) : null,
         participation_type: body.participation_type === "team" ? "team" : "solo",
         team_min_members: Number.isFinite(Number(body.team_min_members)) ? Number(body.team_min_members) : null,
@@ -145,6 +148,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
         // Registration config – always overwrite so admin config saves correctly
         registration_type: body.registration_type === "paid" ? "paid" : "unpaid",
         payment_qr_url: body.payment_qr_url ? String(body.payment_qr_url) : null,
+        payment_link: body.payment_link ? String(body.payment_link) : null,
         payment_instructions: body.payment_instructions ? String(body.payment_instructions) : null,
         participation_type: body.participation_type === "team" ? "team" : "solo",
         team_min_members: Number.isFinite(Number(body.team_min_members)) ? Number(body.team_min_members) : null,

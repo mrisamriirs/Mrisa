@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, CreditCard, CheckCircle, Building2, GraduationCap, Calendar, Clock, MapPin, ArrowRight, ImageIcon } from "lucide-react";
+import { ArrowLeft, Users, CreditCard, CheckCircle, Building2, GraduationCap, Calendar, Clock, MapPin, ArrowRight, ExternalLink } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { submitRegistration, fetchEvents } from "@/lib/api";
+import { submitRegistration, fetchEvents, fetchRegistrationCount } from "@/lib/api";
 import { Scene3D } from "@/components/Scene3D";
 
 const DEFAULT_FORM_FIELDS = [
@@ -30,6 +30,7 @@ const RegisterPage = () => {
 
   const [step, setStep] = useState<Step>("details");
   const [regType, setRegType] = useState<RegType>(null);
+  const [liveCount, setLiveCount] = useState<number | null>(null);
 
   const isTeam = event?.participation_type === "team";
   const numTeamMembers = Number(event?.team_min_members) || 1;
@@ -49,6 +50,8 @@ const RegisterPage = () => {
           setEvent(ev);
           const minMembers = ev.participation_type === "team" ? Number(ev.team_min_members) || 1 : 1;
           setMembersData(Array.from({ length: minMembers }, () => ({})));
+          // Fetch live registration count
+          fetchRegistrationCount(eventId!).then(setLiveCount);
         }
       } catch (error) {
         toast({ title: "Error", description: "Failed to load event details", variant: "destructive" });
@@ -272,8 +275,9 @@ const RegisterPage = () => {
                           <CreditCard className="w-3 h-3" /> Paid Event
                         </span>
                       )}
-                      <span className="bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 text-green-400 text-xs">
-                        {event.attendees || 0} Registered
+                      <span className="bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 text-green-400 text-xs flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                        {liveCount === null ? '...' : liveCount} Registered
                       </span>
                     </div>
                   </div>
@@ -414,9 +418,37 @@ const RegisterPage = () => {
                           {event.payment_instructions}
                         </p>
                       )}
+                      {/* QR code image - only render if it looks like an actual image */}
                       {event.payment_qr_url && (
-                        <div className="mb-5 bg-white p-3 rounded-xl inline-block">
-                          <img src={event.payment_qr_url} alt="Payment QR" className="max-w-[220px] h-auto rounded" />
+                        event.payment_qr_url.startsWith('data:image') ||
+                        event.payment_qr_url.startsWith('https://') ||
+                        event.payment_qr_url.startsWith('http://')
+                      ) && (
+                        <div className="mb-5">
+                          <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">Scan to Pay</p>
+                          <div className="bg-white p-3 rounded-xl inline-block">
+                            <img
+                              src={event.payment_qr_url}
+                              alt="Payment QR"
+                              className="max-w-[200px] h-auto rounded"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {/* Payment link button */}
+                      {event.payment_link && (
+                        <div className="mb-5">
+                          <a
+                            href={event.payment_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Pay Now
+                          </a>
+                          <p className="text-xs text-gray-600 mt-1 font-mono break-all">{event.payment_link}</p>
                         </div>
                       )}
                       <div>

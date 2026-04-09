@@ -18,20 +18,32 @@ const requireAdmin = (req: IncomingMessage & { headers: Record<string, string | 
 const readBody = async (req: IncomingMessage & { body?: unknown }) => {
   if (req.body && typeof req.body === "object") return req.body as Record<string, unknown>;
   if (typeof req.body === "string") return JSON.parse(req.body || "{}");
-
   let raw = "";
-  for await (const chunk of req) {
-    raw += chunk;
-  }
-
+  for await (const chunk of req) raw += chunk;
   return raw ? JSON.parse(raw) : {};
 };
 
-export default async function handler(req: IncomingMessage & { body?: unknown; query?: Record<string, string | string[]>; headers: Record<string, string | string[] | undefined> }, res: ServerResponse) {
+export default async function handler(
+  req: IncomingMessage & {
+    body?: unknown;
+    query?: Record<string, string | string[]>;
+    headers: Record<string, string | string[] | undefined>;
+  },
+  res: ServerResponse
+) {
   try {
-    const db = await getMongoDb(0);
+    const db = await getMongoDb();
     const collection = db.collection("registrations");
 
+    // ---- Public count endpoint: GET /api/registrations?count=1&event_id=xxx ----
+    if (req.method === "GET" && req.query?.count) {
+      const eventId = req.query?.event_id ? String(req.query.event_id) : null;
+      const query = eventId ? { event_id: eventId } : {};
+      const count = await collection.countDocuments(query);
+      return sendJson(res, 200, { count });
+    }
+
+    // ---- Admin-only: GET full list ----
     if (req.method === "GET") {
       if (!requireAdmin(req)) return sendJson(res, 401, { error: "Authentication required" });
       const eventId = req.query?.event_id;
@@ -40,6 +52,23 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
       return sendJson(res, 200, regs.map(r => ({ ...r, id: String(r._id) })));
     }
 
+    // ---- Admin-only: PUT edit a registration ----
+    if (req.method === "PUT") {
+      if (!requireAdmin(req)) return sendJson(res, 401, { error: "Authentication required" });
+      const body = (await readBody(req)) as Record<string, unknown>;
+      const id = String(body.id || "").trim();
+      if (!id) return sendJson(res, 400, { error: "Missing registration id" });
+
+      // Strip immutable fields
+      const { id: _id, _id: __id, created_at, event_id, ...rest } = body as any;
+      const update = { ...rest, updated_at: new Date().toISOString() };
+
+      const result = await collection.updateOne({ _id: new ObjectId(id) }, { $set: update });
+      if (!result.matchedCount) return sendJson(res, 404, { error: "Registration not found" });
+      return sendJson(res, 200, { ok: true });
+    }
+
+    // ---- Admin-only: DELETE ----
     if (req.method === "DELETE") {
       if (!requireAdmin(req)) return sendJson(res, 401, { error: "Authentication required" });
       const id = String(req.query?.id || "");
@@ -49,25 +78,17 @@ export default async function handler(req: IncomingMessage & { body?: unknown; q
       return sendJson(res, 200, { ok: true });
     }
 
+    // ---- Public: POST submit a registration ----
     if (req.method !== "POST") {
-      res.setHeader("Allow", ["GET", "POST", "DELETE"]);
+      res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
       return sendJson(res, 405, { error: "Method not allowed" });
     }
 
     const body = (await readBody(req)) as Record<string, unknown>;
     const eventId = String(body.event_id || "").trim();
-    
-    if (!eventId) {
-      return sendJson(res, 400, { error: "Missing event_id" });
-    }
+    if (!eventId) return sendJson(res, 400, { error: "Missing event_id" });
 
-    const payload = {
-      ...body,
-      event_id: eventId,
-      created_at: new Date().toISOString(),
-    };
-
-    await collection.insertOne(payload);
+    await collection.insertOne({ ...body, event_id: eventId, created_at: new Date().toISOString() });
     return sendJson(res, 201, { ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Registration request failed";

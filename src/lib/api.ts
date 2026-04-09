@@ -196,6 +196,25 @@ export async function deleteRegistration(id: string): Promise<void> {
   });
 }
 
+export async function updateRegistration(id: string, data: Record<string, unknown>): Promise<void> {
+  await apiRequest<{ ok: true }>("/registrations", {
+    method: "PUT",
+    body: JSON.stringify({ ...data, id }),
+  });
+}
+
+export async function fetchRegistrationCount(eventId: string): Promise<number> {
+  try {
+    const res = await fetch(`/api/registrations?count=1&event_id=${encodeURIComponent(eventId)}`);
+    if (!res.ok) return 0;
+    const data = await res.json() as { count: number };
+    return data.count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+
 export async function loginAdmin(email: string, password: string): Promise<AdminSession> {
   return apiRequest<AdminSession>("/auth", {
     method: "POST",
