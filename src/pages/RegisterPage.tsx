@@ -357,7 +357,7 @@ const RegisterPage = () => {
                         <MapPin className="w-5 h-5 text-yellow-400 flex-shrink-0" />
                         <div>
                           <p className="text-[10px] uppercase text-gray-500 tracking-wider">Location</p>
-                          <p className="text-sm text-white">{event.location}</p>
+                          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`} target="_blank" rel="noopener noreferrer" className="text-sm text-white hover:text-blue-400 transition-colors flex items-center gap-1">{event.location} <ExternalLink className="w-3 h-3 text-gray-500" /></a>
                         </div>
                       </div>
                     </div>
